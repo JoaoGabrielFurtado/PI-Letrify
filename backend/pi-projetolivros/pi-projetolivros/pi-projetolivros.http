@@ -1,0 +1,6 @@
+@pi_projetolivros_HostAddress = http://localhost:5265
+
+GET {{pi_projetolivros_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

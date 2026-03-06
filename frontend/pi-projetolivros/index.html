@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PI-Letrify — Explorador de Livros</title>
+    <meta name="description" content="Explore e pesquise livros usando a Open Library API. Busque por título, autor, tema ou ISBN.">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand">
+                <i class="bi bi-book-fill"></i>
+                PI-Letrify
+            </span>
+            <span class="navbar-text ms-auto">
+                <span class="nav-badge">
+                    <i class="bi bi-globe2"></i> Explorador de APIs
+                </span>
+            </span>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container-main">
+        <!-- Header -->
+        <div class="header-section">
+            <h1>
+                <span class="header-icon-wrapper">
+                    <i class="bi bi-book-half"></i>
+                </span>
+                Explorador de Livros
+            </h1>
+            <p>Pesquise e explore o acervo da Open Library com 4 modos de busca</p>
+        </div>
+
+        <!-- API Status -->
+        <div id="apiStatus"></div>
+
+        <!-- Tabs Navigation -->
+        <div class="tabs-wrapper">
+            <div class="tabs-container" id="tabsContainer">
+                <div class="endpoint-tab active" onclick="showEndpoint('endpointTitle', this)" id="tabTitle">
+                    <i class="bi bi-type-bold"></i>
+                    <span>Buscar por Título</span>
+                </div>
+                <div class="endpoint-tab" onclick="showEndpoint('endpointAuthor', this)" id="tabAuthor">
+                    <i class="bi bi-person"></i>
+                    <span>Buscar por Autor</span>
+                </div>
+                <div class="endpoint-tab" onclick="showEndpoint('endpointTheme', this)" id="tabTheme">
+                    <i class="bi bi-bookmark-star"></i>
+                    <span>Buscar por Tema</span>
+                </div>
+                <div class="endpoint-tab" onclick="showEndpoint('endpointISBN', this)" id="tabISBN">
+                    <i class="bi bi-upc-scan"></i>
+                    <span>Buscar por ISBN</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TITLE SEARCH ==================== -->
+        <div id="endpointTitle" class="endpoint-content">
+            <div class="search-card">
+                <div class="search-card-header">
+                    <div class="header-left">
+                        <i class="bi bi-type-bold"></i>
+                        <span>Buscar Livros por Título</span>
+                    </div>
+                    <span class="method-badge">GET</span>
+                </div>
+                <div class="search-card-body">
+                    <p class="endpoint-url">
+                        <code>/api/livro/livrostitulo?titulo=VALUE&pagina=VALUE&quantidade=VALUE</code>
+                    </p>
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label" for="titleInput">Título do Livro</label>
+                            <div class="search-input-group">
+                                <i class="bi bi-search input-icon"></i>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    id="titleInput" 
+                                    placeholder="Ex: The Great Gatsby, 1984, Dom Casmurro..."
+                                    onkeypress="if(event.key==='Enter') searchByTitle()">
+                            </div>
+                        </div>
+                        <!-- Filters Row -->
+                        <div class="col-md-3">
+                            <label class="form-label" for="titleLangFilter">Idioma</label>
+                            <select class="form-select" id="titleLangFilter">
+                                <option value="">Todos</option>
+                                <option value="por">Português</option>
+                                <option value="eng">Inglês</option>
+                                <option value="spa">Espanhol</option>
+                                <option value="fre">Francês</option>
+                                <option value="ger">Alemão</option>
+                                <option value="ita">Italiano</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="titleSortFilter">Ordenar por</label>
+                            <select class="form-select" id="titleSortFilter">
+                                <option value="">Relevância</option>
+                                <option value="new">Mais Recentes</option>
+                                <option value="old">Mais Antigos</option>
+                                <option value="title">Título (A-Z)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="titlePageInput">Página</label>
+                            <input type="number" class="form-control" id="titlePageInput" value="1" min="1">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="titleQuantityInput">Quantidade</label>
+                            <input type="number" class="form-control" id="titleQuantityInput" value="10" min="1" max="50">
+                        </div>
+                    </div>
+                    <button class="btn-search mt-4" onclick="searchByTitle()">
+                        <i class="bi bi-search"></i> Buscar por Título
+                    </button>
+                    <div class="search-hint">
+                        <i class="bi bi-lightbulb"></i>
+                        Dica: Tente "1984", "Pride and Prejudice", "O Alquimista"
+                    </div>
+                </div>
+            </div>
+            <div id="resultsTitle" class="results-container"></div>
+        </div>
+
+        <!-- ==================== AUTHOR SEARCH ==================== -->
+        <div id="endpointAuthor" class="endpoint-content d-none">
+            <div class="search-card">
+                <div class="search-card-header">
+                    <div class="header-left">
+                        <i class="bi bi-person"></i>
+                        <span>Buscar Livros por Autor</span>
+                    </div>
+                    <span class="method-badge">GET</span>
+                </div>
+                <div class="search-card-body">
+                    <p class="endpoint-url">
+                        <code>/api/livro/livrosautor?autor=VALUE&pagina=VALUE&quantidade=VALUE</code>
+                    </p>
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label" for="authorInput">Nome do Autor</label>
+                            <div class="search-input-group">
+                                <i class="bi bi-person-badge input-icon"></i>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    id="authorInput" 
+                                    placeholder="Ex: J.K. Rowling, Machado de Assis, Stephen King..."
+                                    onkeypress="if(event.key==='Enter') searchByAuthor()">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="authorLangFilter">Idioma</label>
+                            <select class="form-select" id="authorLangFilter">
+                                <option value="">Todos</option>
+                                <option value="por">Português</option>
+                                <option value="eng">Inglês</option>
+                                <option value="spa">Espanhol</option>
+                                <option value="fre">Francês</option>
+                                <option value="ger">Alemão</option>
+                                <option value="ita">Italiano</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="authorSortFilter">Ordenar por</label>
+                            <select class="form-select" id="authorSortFilter">
+                                <option value="">Relevância</option>
+                                <option value="new">Mais Recentes</option>
+                                <option value="old">Mais Antigos</option>
+                                <option value="title">Título (A-Z)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="authorPageInput">Página</label>
+                            <input type="number" class="form-control" id="authorPageInput" value="1" min="1">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="authorQuantityInput">Quantidade</label>
+                            <input type="number" class="form-control" id="authorQuantityInput" value="10" min="1" max="50">
+                        </div>
+                    </div>
+                    <button class="btn-search mt-4" onclick="searchByAuthor()">
+                        <i class="bi bi-search"></i> Buscar por Autor
+                    </button>
+                    <div class="search-hint">
+                        <i class="bi bi-lightbulb"></i>
+                        Dica: Tente "J.R.R. Tolkien", "George Orwell", "Clarice Lispector"
+                    </div>
+                </div>
+            </div>
+            <div id="resultsAuthor" class="results-container"></div>
+        </div>
+
+        <!-- ==================== THEME SEARCH ==================== -->
+        <div id="endpointTheme" class="endpoint-content d-none">
+            <div class="search-card">
+                <div class="search-card-header">
+                    <div class="header-left">
+                        <i class="bi bi-bookmark-star"></i>
+                        <span>Explorar Livros por Tema</span>
+                    </div>
+                    <span class="method-badge">GET</span>
+                </div>
+                <div class="search-card-body">
+                    <p class="endpoint-url">
+                        <code>/api/livro/livrostema?tema=VALUE&pagina=VALUE&quantidade=VALUE</code>
+                    </p>
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label" for="themeInput">Tema</label>
+                            <div class="search-input-group">
+                                <i class="bi bi-bookmark input-icon"></i>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    id="themeInput" 
+                                    placeholder="Ex: fantasy, romance, history, science fiction..."
+                                    value="fiction"
+                                    onkeypress="if(event.key==='Enter') searchByTheme()">
+                            </div>
+                        </div>
+                        <!-- Quick Theme Tags -->
+                        <div class="col-md-12">
+                            <div class="quick-tags">
+                                <span class="quick-tag" onclick="setTheme('fiction')">Fiction</span>
+                                <span class="quick-tag" onclick="setTheme('fantasy')">Fantasy</span>
+                                <span class="quick-tag" onclick="setTheme('romance')">Romance</span>
+                                <span class="quick-tag" onclick="setTheme('science')">Science</span>
+                                <span class="quick-tag" onclick="setTheme('history')">History</span>
+                                <span class="quick-tag" onclick="setTheme('mystery')">Mystery</span>
+                                <span class="quick-tag" onclick="setTheme('horror')">Horror</span>
+                                <span class="quick-tag" onclick="setTheme('adventure')">Adventure</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="themeLangFilter">Idioma</label>
+                            <select class="form-select" id="themeLangFilter">
+                                <option value="">Todos</option>
+                                <option value="por">Português</option>
+                                <option value="eng">Inglês</option>
+                                <option value="spa">Espanhol</option>
+                                <option value="fre">Francês</option>
+                                <option value="ger">Alemão</option>
+                                <option value="ita">Italiano</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="themeSortFilter">Ordenar por</label>
+                            <select class="form-select" id="themeSortFilter">
+                                <option value="">Relevância</option>
+                                <option value="new">Mais Recentes</option>
+                                <option value="old">Mais Antigos</option>
+                                <option value="title">Título (A-Z)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="pageInput">Página</label>
+                            <input type="number" class="form-control" id="pageInput" value="1" min="1">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="quantityInput">Quantidade</label>
+                            <input type="number" class="form-control" id="quantityInput" value="10" min="1" max="50">
+                        </div>
+                    </div>
+                    <button class="btn-search mt-4" onclick="searchByTheme()">
+                        <i class="bi bi-search"></i> Buscar por Tema
+                    </button>
+                </div>
+            </div>
+            <div id="resultsTheme" class="results-container"></div>
+        </div>
+
+        <!-- ==================== ISBN SEARCH ==================== -->
+        <div id="endpointISBN" class="endpoint-content d-none">
+            <div class="search-card">
+                <div class="search-card-header">
+                    <div class="header-left">
+                        <i class="bi bi-upc-scan"></i>
+                        <span>Buscar Livro por ISBN</span>
+                    </div>
+                    <span class="method-badge">GET</span>
+                </div>
+                <div class="search-card-body">
+                    <p class="endpoint-url">
+                        <code>/api/livro/livroespecifico/{isbn}</code>
+                    </p>
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label" for="isbnInput">ISBN do Livro</label>
+                            <div class="search-input-group">
+                                <i class="bi bi-upc input-icon"></i>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    id="isbnInput" 
+                                    placeholder="Ex: 0451524934"
+                                    onkeypress="if(event.key==='Enter') searchByISBN()">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-search mt-4" onclick="searchByISBN()">
+                        <i class="bi bi-search"></i> Buscar por ISBN
+                    </button>
+                    <div class="search-hint">
+                        <i class="bi bi-lightbulb"></i>
+                        Dica: Tente "0451524934" ou "0451529944"
+                    </div>
+                </div>
+            </div>
+            <div id="resultsISBN" class="results-container"></div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <p>PI-Letrify &copy; 2026 — Projeto Integrador</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_BASE_URL = 'https://letrify.fly.dev/api/livro';
+
+        // UTF-8 Encode
+        function encodeSpecialChars(str) {
+            return encodeURIComponent(str);
+        }
+
+        // Set theme from quick-tag
+        function setTheme(theme) {
+            document.getElementById('themeInput').value = theme;
+            // Highlight the clicked tag
+            document.querySelectorAll('.quick-tag').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        // Show/Hide Endpoints
+        function showEndpoint(endpointId, tabEl) {
+            document.querySelectorAll('.endpoint-content').forEach(el => {
+                el.classList.add('d-none');
+            });
+            document.querySelectorAll('.endpoint-tab').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.getElementById(endpointId).classList.remove('d-none');
+            tabEl.classList.add('active');
+        }
+
+        // Build optional query params for filters
+        function buildFilterParams(langId, sortId) {
+            let params = '';
+            const lang = document.getElementById(langId);
+            const sort = document.getElementById(sortId);
+            if (lang && lang.value) params += `&language=${lang.value}`;
+            if (sort && sort.value) params += `&sort=${sort.value}`;
+            return params;
+        }
+
+        // Update API Status
+        function updateApiStatus(message, type) {
+            const statusDiv = document.getElementById('apiStatus');
+            const icons = {
+                success: 'check-circle-fill',
+                error: 'exclamation-triangle-fill',
+                loading: 'arrow-repeat'
+            };
+            statusDiv.innerHTML = `
+                <div class="api-status ${type}">
+                    <i class="bi bi-${icons[type] || 'info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            if (type !== 'loading') {
+                setTimeout(() => { statusDiv.innerHTML = ''; }, 5000);
+            }
+        }
+
+        // Display Results
+        function displayResults(data, containerId, isMultiple = true) {
+            const container = document.getElementById(containerId);
+            
+            if (!data || (Array.isArray(data) && data.length === 0)) {
+                container.innerHTML = `
+                    <div class="no-results">
+                        <i class="bi bi-inbox"></i>
+                        <p>Nenhum resultado encontrado.</p>
+                        <span>Tente alterar os termos da sua busca</span>
+                    </div>
+                `;
+                return;
+            }
+
+            const books = Array.isArray(data) ? data : [data];
+            let html = '';
+
+            books.forEach((book, index) => {
+                html += createBookCard(book, index + 1);
+            });
+
+            container.innerHTML = `
+                <div class="results-header">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>${books.length} livro(s) encontrado(s)</span>
+                </div>
+                <div class="books-grid">
+                    ${html}
+                </div>
+            `;
+        }
+
+        // Language code to display name map
+        const LANG_MAP = {
+            'eng': 'Inglês', 'por': 'Português', 'spa': 'Espanhol',
+            'fre': 'Francês', 'ger': 'Alemão', 'ita': 'Italiano',
+            'jpn': 'Japonês', 'chi': 'Chinês', 'rus': 'Russo',
+            'ara': 'Árabe', 'kor': 'Coreano', 'dut': 'Holandês',
+            'pol': 'Polonês', 'tur': 'Turco', 'swe': 'Sueco',
+            'dan': 'Dinamarquês', 'nor': 'Norueguês', 'fin': 'Finlandês',
+            'lat': 'Latim', 'gre': 'Grego', 'heb': 'Hebraico',
+            'cat': 'Catalão', 'rum': 'Romeno', 'hun': 'Húngaro',
+            'cze': 'Tcheco', 'hin': 'Hindi', 'tha': 'Tailandês',
+            'mul': 'Múltiplos', 'und': 'Indefinido'
+        };
+
+        function formatLanguages(langCodes) {
+            if (!langCodes || langCodes.length === 0) return null;
+            // Show up to 3 unique languages
+            const unique = [...new Set(langCodes)];
+            const names = unique.slice(0, 3).map(c => LANG_MAP[c] || c.toUpperCase());
+            const suffix = unique.length > 3 ? ` +${unique.length - 3}` : '';
+            return names.join(', ') + suffix;
+        }
+
+        // Create Book Card
+        function createBookCard(book, index) {
+            const themes = book.temas && book.temas.length > 0 
+                ? book.temas.map(t => `<span class="theme-badge">${t}</span>`).join(' ')
+                : '<span class="theme-badge muted">Sem temas</span>';
+
+            const isbn = book.isbn && book.isbn !== 'Sem ISBN' ? book.isbn : null;
+            const coverUrl = isbn 
+                ? `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg`
+                : null;
+
+            const coverHtml = coverUrl
+                ? `<div class="book-cover">
+                       <img src="${coverUrl}" alt="Capa" onerror="this.parentElement.innerHTML='<div class=\\'cover-placeholder\\'><i class=\\'bi bi-book\\'></i></div>'">
+                   </div>`
+                : `<div class="book-cover">
+                       <div class="cover-placeholder"><i class="bi bi-book"></i></div>
+                   </div>`;
+
+            const langText = formatLanguages(book.idiomas);
+            const langHtml = langText 
+                ? `<div class="meta-item"><i class="bi bi-translate"></i><span>${langText}</span></div>`
+                : '';
+
+            return `
+                <div class="book-card" style="animation-delay: ${index * 0.05}s">
+                    ${coverHtml}
+                    <div class="book-details">
+                        <div class="book-title">
+                            ${book.titulo || 'Título desconhecido'}
+                        </div>
+                        <div class="book-meta">
+                            <div class="meta-item">
+                                <i class="bi bi-person-fill"></i>
+                                <span>${book.autorPrincipal || 'Desconhecido'}</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="bi bi-calendar3"></i>
+                                <span>${book.dataPublicacao || 'N/A'}</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="bi bi-building"></i>
+                                <span>${book.editora || 'N/A'}</span>
+                            </div>
+                            ${book.paginas ? `<div class="meta-item"><i class="bi bi-file-earmark-text"></i><span>${book.paginas} páginas</span></div>` : ''}
+                            <div class="meta-item">
+                                <i class="bi bi-hash"></i>
+                                <span>${book.isbn || 'N/A'}</span>
+                            </div>
+                            ${langHtml}
+                        </div>
+                        <div class="book-themes">${themes}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Search by ISBN
+        async function searchByISBN() {
+            const isbn = document.getElementById('isbnInput').value.trim();
+            
+            if (!isbn) {
+                updateApiStatus('Por favor, insira um ISBN válido.', 'error');
+                return;
+            }
+
+            const resultsContainer = document.getElementById('resultsISBN');
+            resultsContainer.innerHTML = '<div class="loading"><div class="spinner"></div> Buscando livro...</div>';
+            updateApiStatus('Conectando à API...', 'loading');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/livroespecifico/${encodeSpecialChars(isbn)}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Erro: ${response.status} — ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                displayResults(data, 'resultsISBN', false);
+                updateApiStatus('✓ Busca por ISBN concluída com sucesso!', 'success');
+            } catch (error) {
+                console.error(error);
+                resultsContainer.innerHTML = `
+                    <div class="error-box">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Erro ao buscar:</strong> ${error.message}
+                    </div>
+                `;
+                updateApiStatus(`Erro: ${error.message}`, 'error');
+            }
+        }
+
+        // Search by Theme
+        async function searchByTheme() {
+            const tema = document.getElementById('themeInput').value.trim();
+            const pagina = document.getElementById('pageInput').value || 1;
+            const quantidade = document.getElementById('quantityInput').value || 10;
+
+            if (!tema) {
+                updateApiStatus('Por favor, insira um tema válido.', 'error');
+                return;
+            }
+
+            const resultsContainer = document.getElementById('resultsTheme');
+            resultsContainer.innerHTML = '<div class="loading"><div class="spinner"></div> Buscando por tema...</div>';
+            updateApiStatus('Conectando à API...', 'loading');
+
+            try {
+                let url = `${API_BASE_URL}/livrostema?tema=${encodeSpecialChars(tema)}&pagina=${pagina}&quantidade=${quantidade}`;
+                url += buildFilterParams('themeLangFilter', 'themeSortFilter');
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error(`Erro: ${response.status} — ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                displayResults(data, 'resultsTheme', true);
+                updateApiStatus(`✓ Busca por tema concluída! ${data.length} livro(s) encontrado(s)`, 'success');
+            } catch (error) {
+                console.error(error);
+                resultsContainer.innerHTML = `
+                    <div class="error-box">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Erro ao buscar:</strong> ${error.message}
+                    </div>
+                `;
+                updateApiStatus(`Erro: ${error.message}`, 'error');
+            }
+        }
+
+        // Search by Title
+        async function searchByTitle() {
+            const titulo = document.getElementById('titleInput').value.trim();
+            const pagina = document.getElementById('titlePageInput').value || 1;
+            const quantidade = document.getElementById('titleQuantityInput').value || 10;
+
+            if (!titulo) {
+                updateApiStatus('Por favor, insira um título válido.', 'error');
+                return;
+            }
+
+            const resultsContainer = document.getElementById('resultsTitle');
+            resultsContainer.innerHTML = '<div class="loading"><div class="spinner"></div> Buscando por título...</div>';
+            updateApiStatus('Conectando à API...', 'loading');
+
+            try {
+                let url = `${API_BASE_URL}/livrostitulo?titulo=${encodeSpecialChars(titulo)}&pagina=${pagina}&quantidade=${quantidade}`;
+                url += buildFilterParams('titleLangFilter', 'titleSortFilter');
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error(`Erro: ${response.status} — ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                displayResults(data, 'resultsTitle', true);
+                updateApiStatus(`✓ Busca por título concluída! ${data.length} livro(s) encontrado(s)`, 'success');
+            } catch (error) {
+                console.error(error);
+                resultsContainer.innerHTML = `
+                    <div class="error-box">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Erro ao buscar:</strong> ${error.message}
+                    </div>
+                `;
+                updateApiStatus(`Erro: ${error.message}`, 'error');
+            }
+        }
+
+        // Search by Author
+        async function searchByAuthor() {
+            const autor = document.getElementById('authorInput').value.trim();
+            const pagina = document.getElementById('authorPageInput').value || 1;
+            const quantidade = document.getElementById('authorQuantityInput').value || 10;
+
+            if (!autor) {
+                updateApiStatus('Por favor, insira o nome de um autor.', 'error');
+                return;
+            }
+
+            const resultsContainer = document.getElementById('resultsAuthor');
+            resultsContainer.innerHTML = '<div class="loading"><div class="spinner"></div> Buscando por autor...</div>';
+            updateApiStatus('Conectando à API...', 'loading');
+
+            try {
+                let url = `${API_BASE_URL}/livrosautor?autor=${encodeSpecialChars(autor)}&pagina=${pagina}&quantidade=${quantidade}`;
+                url += buildFilterParams('authorLangFilter', 'authorSortFilter');
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error(`Erro: ${response.status} — ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                displayResults(data, 'resultsAuthor', true);
+                updateApiStatus(`✓ Busca por autor concluída! ${data.length} livro(s) encontrado(s)`, 'success');
+            } catch (error) {
+                console.error(error);
+                resultsContainer.innerHTML = `
+                    <div class="error-box">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Erro ao buscar:</strong> ${error.message}
+                    </div>
+                `;
+                updateApiStatus(`Erro: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('✓ Frontend carregado com sucesso!');
+            console.log('API Base URL:', API_BASE_URL);
+        });
+    </script>
+</body>
+</html>

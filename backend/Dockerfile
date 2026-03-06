@@ -1,22 +1,29 @@
-# Etapa 1: Build (Usa o SDK completo para compilar o código)
+# Etapa 1: Build
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copia o arquivo .csproj e restaura as dependências
-COPY ["SeuProjetoBackend.csproj", "./"]
-RUN dotnet restore "SeuProjetoBackend.csproj"
+# Copia apenas o arquivo .csproj primeiro (respeitando a estrutura de pastas da sua imagem)
+COPY ["pi-projetolivros/pi-projetolivros/pi-projetolivros.csproj", "pi-projetolivros/pi-projetolivros/"]
 
-# Copia o resto do código e compila
+# Restaura as dependências do projeto
+RUN dotnet restore "pi-projetolivros/pi-projetolivros/pi-projetolivros.csproj"
+
+# Copia todo o resto do código do backend para dentro do container
 COPY . .
-RUN dotnet publish "SeuProjetoBackend.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# Etapa 2: Produção (Usa apenas o Runtime, deixando a imagem final muito mais leve)
+# Entra na pasta final onde o código fonte está de fato
+WORKDIR "/src/pi-projetolivros/pi-projetolivros"
+
+# Compila o projeto
+RUN dotnet publish "pi-projetolivros.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+# Etapa 2: Produção (Imagem mais leve apenas para rodar o app)
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app/publish .
 
-# Expõe a porta padrão do .NET
+# Expõe a porta que configuramos no Fly.io
 EXPOSE 8080
 
-# Comando para rodar a DLL compilada
-ENTRYPOINT ["dotnet", "SeuProjetoBackend.dll"]
+# Comando final apontando para a DLL gerada com o nome do projeto
+ENTRYPOINT ["dotnet", "pi-projetolivros.dll"]

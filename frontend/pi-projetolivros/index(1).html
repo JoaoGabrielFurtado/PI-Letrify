@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PI-Letrify - Testador de Endpoints de Livros</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand">
+                <i class="bi bi-book-fill"></i>
+                PI-Letrify
+            </span>
+            <span class="navbar-text ms-auto" style="color: white; font-size: 0.9rem;">
+                <i class="bi bi-globe"></i> Testador de APIs
+            </span>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container-main">
+        <!-- Header -->
+        <div class="header-section">
+            <h1>
+                <i class="bi bi-search"></i>
+                Testador de Endpoints
+            </h1>
+            <p>Explore e teste todos os 3 endpoints disponíveis da API de Livros</p>
+        </div>
+
+        <!-- API Status -->
+        <div id="apiStatus"></div>
+
+        <!-- Tabs Navigation -->
+        <div class="card mb-4">
+            <div class="card-body p-0" style="background: white;">
+                <div class="d-flex flex-wrap">
+                    <div class="endpoint-tab active" onclick="showEndpoint('endpoint1')">
+                        <i class="bi bi-search"></i> Buscar por ISBN
+                        <span class="endpoint-counter">Endpoint 1</span>
+                    </div>
+                    <div class="endpoint-tab" onclick="showEndpoint('endpoint2')">
+                        <i class="bi bi-tag"></i> Buscar por Tema
+                        <span class="endpoint-counter">Endpoint 2</span>
+                    </div>
+                    <div class="endpoint-tab" onclick="showEndpoint('endpoint3')">
+                        <i class="bi bi-book"></i> Buscar por Título
+                        <span class="endpoint-counter">Endpoint 3</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Endpoint 1: ISBN Search -->
+        <div id="endpoint1" class="endpoint-content">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-search"></i> Endpoint 1: Buscar Livro por ISBN
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">
+                        <strong>GET:</strong> <code>/api/livro/livroespecifico/{isbn}</code>
+                    </p>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <label class="form-label" for="isbnInput">ISBN do Livro:</label>
+                            <div class="input-group">
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    id="isbnInput" 
+                                    placeholder="Ex: 0451524934"
+                                    onkeypress="if(event.key==='Enter') searchByISBN()">
+                                <button class="btn btn-primary" onclick="searchByISBN()">
+                                    <i class="bi bi-search"></i> Buscar
+                                </button>
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                💡 Dica: Tente "0451524934" ou "0451529944"
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="results1" class="results-container"></div>
+        </div>
+
+        <!-- Endpoint 2: Theme Search -->
+        <div id="endpoint2" class="endpoint-content d-none">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-tag"></i> Endpoint 2: Explorar Livros por Tema
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">
+                        <strong>GET:</strong> <code>/api/livro/livrostema?tema=VALUE&pagina=VALUE&quantidade=VALUE</code>
+                    </p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label" for="themeInput">Tema:</label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="themeInput" 
+                                placeholder="Ex: fantasy, fiction, science"
+                                value="fiction"
+                                onkeypress="if(event.key==='Enter') searchByTheme()">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="pageInput">Página:</label>
+                            <input 
+                                type="number" 
+                                class="form-control" 
+                                id="pageInput" 
+                                value="1"
+                                min="1">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="quantityInput">Quantidade:</label>
+                            <input 
+                                type="number" 
+                                class="form-control" 
+                                id="quantityInput" 
+                                value="10"
+                                min="1"
+                                max="50">
+                        </div>
+                    </div>
+                    <button class="btn btn-success mt-3" onclick="searchByTheme()">
+                        <i class="bi bi-search"></i> Buscar por Tema
+                    </button>
+                    <small class="text-muted d-block mt-2">
+                        💡 Temas populares: fiction, fantasy, science, history, romance
+                    </small>
+                </div>
+            </div>
+            <div id="results2" class="results-container"></div>
+        </div>
+
+        <!-- Endpoint 3: Title Search -->
+        <div id="endpoint3" class="endpoint-content d-none">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-book"></i> Endpoint 3: Buscar Livros por Título
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">
+                        <strong>GET:</strong> <code>/api/livro/livrostitulo?titulo=VALUE&pagina=VALUE&quantidade=VALUE</code>
+                    </p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label" for="titleInput">Título do Livro:</label>
+                            <div class="input-group">
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    id="titleInput" 
+                                    placeholder="Ex: The Great Gatsby"
+                                    onkeypress="if(event.key==='Enter') searchByTitle()">
+                                <button class="btn btn-warning" onclick="searchByTitle()">
+                                    <i class="bi bi-search"></i> Buscar
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="titlePageInput">Página:</label>
+                            <input 
+                                type="number" 
+                                class="form-control" 
+                                id="titlePageInput" 
+                                value="1"
+                                min="1">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="titleQuantityInput">Quantidade:</label>
+                            <input 
+                                type="number" 
+                                class="form-control" 
+                                id="titleQuantityInput" 
+                                value="10"
+                                min="1"
+                                max="50">
+                        </div>
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                        💡 Dica: Tente "1984", "Pride and Prejudice", "To Kill a Mockingbird"
+                    </small>
+                </div>
+            </div>
+            <div id="results3" class="results-container"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_BASE_URL = 'http://localhost:5265/api/livro';
+
+        // UTF-8 Encode for special characters
+        function encodeSpecialChars(str) {
+            return encodeURIComponent(str);
+        }
+
+        // Show/Hide Endpoints
+        function showEndpoint(endpointId) {
+            // Hide all contents
+            document.querySelectorAll('.endpoint-content').forEach(el => {
+                el.classList.add('d-none');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.endpoint-tab').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Show selected content
+            document.getElementById(endpointId).classList.remove('d-none');
+            
+            // Add active class to clicked tab
+            event.target.closest('.endpoint-tab').classList.add('active');
+        }
+
+        // Update API Status
+        function updateApiStatus(message, type) {
+            const statusDiv = document.getElementById('apiStatus');
+            statusDiv.innerHTML = `
+                <div class="api-status ${type}">
+                    <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'hourglass-split'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+        }
+
+        // Display Results
+        function displayResults(data, containerId, isMultiple = true) {
+            const container = document.getElementById(containerId);
+            
+            if (!data || (Array.isArray(data) && data.length === 0)) {
+                container.innerHTML = `
+                    <div class="no-results">
+                        <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                        <p>Nenhum resultado encontrado.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const books = Array.isArray(data) ? data : [data];
+            let html = '';
+
+            books.forEach((book, index) => {
+                html += createBookCard(book, index + 1);
+            });
+
+            container.innerHTML = `
+                <div class="alert alert-success alert-custom">
+                    <i class="bi bi-check-circle"></i> 
+                    ${books.length} livro(s) encontrado(s)
+                </div>
+                ${html}
+            `;
+        }
+
+        // Create Book Card
+        function createBookCard(book, index) {
+            const themes = book.temas && book.temas.length > 0 
+                ? book.temas.map(t => `<span class="badge bg-info badge-custom">${t}</span>`).join(' ')
+                : '<span class="badge bg-secondary badge-custom">Sem temas</span>';
+
+            return `
+                <div class="book-card">
+                    <div class="book-title">
+                        <i class="bi bi-book"></i> ${index}. ${book.titulo || 'Título desconhecido'}
+                    </div>
+                    <div class="book-info">
+                        <div class="info-item">
+                            <span class="info-label"><i class="bi bi-hash"></i> ISBN</span>
+                            <div class="info-value">${book.isbn || 'N/A'}</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label"><i class="bi bi-pen"></i> Autor Principal</span>
+                            <div class="info-value">${book.autorPrincipal || 'Desconhecido'}</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label"><i class="bi bi-building"></i> Editora</span>
+                            <div class="info-value">${book.editora || 'N/A'}</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label"><i class="bi bi-calendar"></i> Data de Publicação</span>
+                            <div class="info-value">${book.dataPublicacao || 'N/A'}</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label"><i class="bi bi-file-earmark"></i> Páginas</span>
+                            <div class="info-value">${book.paginas || 'N/A'}</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label"><i class="bi bi-tags"></i> Temas</span>
+                            <div class="info-value mt-2">${themes}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Search by ISBN - Endpoint 1
+        async function searchByISBN() {
+            const isbn = document.getElementById('isbnInput').value.trim();
+            
+            if (!isbn) {
+                updateApiStatus('Por favor, insira um ISBN válido', 'error');
+                return;
+            }
+
+            const resultsContainer = document.getElementById('results1');
+            resultsContainer.innerHTML = '<div class="loading"><div class="spinner"></div> Buscando...</div>';
+            updateApiStatus('Connecting to API...', 'loading');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/livroespecifico/${encodeSpecialChars(isbn)}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Erro: ${response.status} - ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                displayResults(data, 'results1', false);
+                updateApiStatus('✓ Busca por ISBN concluída com sucesso!', 'success');
+            } catch (error) {
+                console.error(error);
+                resultsContainer.innerHTML = `
+                    <div class="alert alert-danger alert-custom">
+                        <i class="bi bi-exclamation-circle"></i>
+                        <strong>Erro ao buscar:</strong> ${error.message}
+                    </div>
+                `;
+                updateApiStatus(`Erro: ${error.message}`, 'error');
+            }
+        }
+
+        // Search by Theme - Endpoint 2
+        async function searchByTheme() {
+            const tema = document.getElementById('themeInput').value.trim();
+            const pagina = document.getElementById('pageInput').value || 1;
+            const quantidade = document.getElementById('quantityInput').value || 10;
+
+            if (!tema) {
+                updateApiStatus('Por favor, insira um tema válido', 'error');
+                return;
+            }
+
+            const resultsContainer = document.getElementById('results2');
+            resultsContainer.innerHTML = '<div class="loading"><div class="spinner"></div> Buscando por tema...</div>';
+            updateApiStatus('Connecting to API...', 'loading');
+
+            try {
+                const url = `${API_BASE_URL}/livrostema?tema=${encodeSpecialChars(tema)}&pagina=${pagina}&quantidade=${quantidade}`;
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error(`Erro: ${response.status} - ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                displayResults(data, 'results2', true);
+                updateApiStatus(`✓ Busca por tema concluída! ${data.length} livro(s) encontrado(s)`, 'success');
+            } catch (error) {
+                console.error(error);
+                resultsContainer.innerHTML = `
+                    <div class="alert alert-danger alert-custom">
+                        <i class="bi bi-exclamation-circle"></i>
+                        <strong>Erro ao buscar:</strong> ${error.message}
+                    </div>
+                `;
+                updateApiStatus(`Erro: ${error.message}`, 'error');
+            }
+        }
+
+        // Search by Title - Endpoint 3
+        async function searchByTitle() {
+            const titulo = document.getElementById('titleInput').value.trim();
+            const pagina = document.getElementById('titlePageInput').value || 1;
+            const quantidade = document.getElementById('titleQuantityInput').value || 10;
+
+            if (!titulo) {
+                updateApiStatus('Por favor, insira um título válido', 'error');
+                return;
+            }
+
+            const resultsContainer = document.getElementById('results3');
+            resultsContainer.innerHTML = '<div class="loading"><div class="spinner"></div> Buscando por título...</div>';
+            updateApiStatus('Connecting to API...', 'loading');
+
+            try {
+                const url = `${API_BASE_URL}/livrostitulo?titulo=${encodeSpecialChars(titulo)}&pagina=${pagina}&quantidade=${quantidade}`;
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error(`Erro: ${response.status} - ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                displayResults(data, 'results3', true);
+                updateApiStatus(`✓ Busca por título concluída! ${data.length} livro(s) encontrado(s)`, 'success');
+            } catch (error) {
+                console.error(error);
+                resultsContainer.innerHTML = `
+                    <div class="alert alert-danger alert-custom">
+                        <i class="bi bi-exclamation-circle"></i>
+                        <strong>Erro ao buscar:</strong> ${error.message}
+                    </div>
+                `;
+                updateApiStatus(`Erro: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('✓ Frontend carregado com sucesso!');
+            console.log('API Base URL:', API_BASE_URL);
+        });
+    </script>
+</body>
+</html>

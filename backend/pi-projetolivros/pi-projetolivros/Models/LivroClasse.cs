@@ -1,8 +1,6 @@
-﻿using pi_projetolivros.DTO;
+﻿namespace pi_projetolivros.Models;
 
-namespace pi_projetolivros.Models;
-
-public class Livro
+public class LivroClasse
 {
     public string Isbn { get; set; }
     public string Titulo { get; set; }
@@ -12,6 +10,4 @@ public class Livro
     public string Editora { get; set; }
 
     public List<string> Temas { get; set; } = new List<string>();
-
-
 }

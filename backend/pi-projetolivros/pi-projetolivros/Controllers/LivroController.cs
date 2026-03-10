@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using pi_projetolivros.DTO;
+using pi_projetolivros.DTO.ConectarApiLivros;
 using pi_projetolivros.Models;
+using pi_projetolivros.Models.Banco;
 using pi_projetolivros_banco;
 using System;
-using System.Text.Json; 
+using System.Text.Json;
 
 namespace pi_projetolivros.Controllers;
 
@@ -20,43 +21,8 @@ public class LivroController : ControllerBase
     //    _contexto = contexto;
     //}
 
-    [HttpGet("livroespecifico/{isbn}")]
-    public async Task<ActionResult<Livro>> RetornaLivroComIsbn(string isbn)
-    {
-
-        //exemplo: GET /api/livro/livroespecifico/{isbn}
-
-        string url = $"https://openlibrary.org/api/books?bibkeys=ISBN:{isbn}&format=json&jscmd=data";
-
-        var response = await _httpClient.GetAsync(url);
-        if (!response.IsSuccessStatusCode)
-            return BadRequest("Erro ao se comunicar com a Open Library.");
-
-        string jsonString = await response.Content.ReadAsStringAsync();
-
-        var resultadoOpenLibrary = JsonSerializer.Deserialize<Dictionary<string, RecebeLivrosDTO>>(jsonString);
-
-        if (resultadoOpenLibrary == null || !resultadoOpenLibrary.Any())
-            return NotFound("Livro não encontrado.");
-
-        var livroExtraido = resultadoOpenLibrary.Values.First();
-
-        var meuLivro = new Livro
-        {
-            Isbn = isbn,
-            Titulo = livroExtraido.Titulo,
-            DataPublicacao = livroExtraido.DataPublicacao,
-            Paginas = livroExtraido.NumeroPaginas ?? 0,
-            AutorPrincipal = livroExtraido.Autores?.FirstOrDefault()?.Name,
-            Editora = livroExtraido.Editora?.FirstOrDefault()?.Name,
-            Temas = livroExtraido.Temas?.Select(s => s.Name).ToList() ?? new List<string>()
-        };
-
-        return Ok(meuLivro);
-    }
-
     [HttpGet("livrostema")]
-    public async Task<ActionResult<List<Livro>>> ExplorarLivros(
+    public async Task<ActionResult<List<LivroClasse>>> ExplorarLivros(
         [FromQuery] string tema = "fiction",
         [FromQuery] int pagina = 1,
         [FromQuery] int quantidade = 20)
@@ -83,7 +49,7 @@ public class LivroController : ControllerBase
     }
 
     [HttpGet("livrostitulo")]
-    public async Task<ActionResult<List<Livro>>> BuscarPorTitulo(
+    public async Task<ActionResult<List<LivroClasse>>> BuscarPorTitulo(
         [FromQuery] string titulo,
         [FromQuery] int pagina = 1,
         [FromQuery] int quantidade = 20)
@@ -114,17 +80,17 @@ public class LivroController : ControllerBase
         return Ok(listaDeLivros);
     }
 
-
+        
 
     // Métodos
-
-    private List<Livro> ConverterDocsParaLivros(List<OpenLibraryPesquisaDoc> docs, string temaPadrao = "")
+    #region Region métodos
+    private List<LivroClasse> ConverterDocsParaLivros(List<OpenLibraryPesquisaDoc> docs, string temaPadrao = "")
     {
-        var listaDeLivros = new List<Livro>();
+        var listaDeLivros = new List<LivroClasse>();
         foreach (var doc in docs)
         {
             string primeiroIsbn = doc.Isbn?.FirstOrDefault() ?? "Sem ISBN";
-            var meuLivro = new Livro
+            var meuLivro = new LivroClasse
             {
                 Isbn = primeiroIsbn,
                 Titulo = doc.Titulo,
@@ -138,4 +104,6 @@ public class LivroController : ControllerBase
         }
         return listaDeLivros;
     }
+    #endregion
+
 }

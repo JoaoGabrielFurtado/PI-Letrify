@@ -3,425 +3,357 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PI-Letrify - Testador de Endpoints de Livros</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Letrify — Rede Social de Livros</title>
+    <meta name="description" content="Letrify: organize seus livros, descubra novas leituras e conecte-se com outros leitores.">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid">
-            <span class="navbar-brand">
-                <i class="bi bi-book-fill"></i>
-                PI-Letrify
-            </span>
-            <span class="navbar-text ms-auto" style="color: white; font-size: 0.9rem;">
-                <i class="bi bi-globe"></i> Testador de APIs
-            </span>
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <!-- ==================== NAVBAR ==================== -->
+    <nav id="mainNavbar" class="navbar d-none">
+        <div class="nav-inner">
+            <a class="nav-brand" href="#perfil">
+                <span class="nav-brand-icon">📚</span> Letrify
+            </a>
+            <div class="nav-links">
+                <a class="nav-link-item" data-view="home" href="#home">
+                    <i class="bi bi-house-door"></i> Home
+                </a>
+                <a class="nav-link-item" data-view="estante" href="#estante">
+                    <i class="bi bi-bookshelf"></i> Minha Estante
+                </a>
+                <a class="nav-link-item" data-view="explorar" href="#explorar">
+                    <i class="bi bi-compass"></i> Explorar
+                </a>
+                <a class="nav-link-item" data-view="perfil" href="#perfil">
+                    <i class="bi bi-person"></i> Perfil
+                </a>
+            </div>
+            <div class="nav-user">
+                <button class="btn-theme-toggle" onclick="toggleTheme()" title="Alternar tema">
+                    <i class="bi bi-moon-fill" id="themeIcon"></i>
+                </button>
+                <span class="nav-user-name" id="navUserName"></span>
+                <button class="btn-logout" onclick="logout()">
+                    <i class="bi bi-box-arrow-right"></i> Sair
+                </button>
+            </div>
         </div>
     </nav>
 
-    <!-- Main Container -->
-    <div class="container-main">
-        <!-- Header -->
-        <div class="header-section">
-            <h1>
-                <i class="bi bi-search"></i>
-                Testador de Endpoints
-            </h1>
-            <p>Explore e teste todos os 3 endpoints disponíveis da API de Livros</p>
-        </div>
-
-        <!-- API Status -->
-        <div id="apiStatus"></div>
-
-        <!-- Tabs Navigation -->
-        <div class="card mb-4">
-            <div class="card-body p-0" style="background: white;">
-                <div class="d-flex flex-wrap">
-                    <div class="endpoint-tab active" onclick="showEndpoint('endpoint1')">
-                        <i class="bi bi-search"></i> Buscar por ISBN
-                        <span class="endpoint-counter">Endpoint 1</span>
+    <!-- ==================== AUTH: LOGIN ==================== -->
+    <div id="view-login" class="view d-none">
+        <div class="auth-wrapper">
+            <div class="auth-card">
+                <div class="auth-brand">
+                    <h1>📚 Letrify</h1>
+                    <p>Sua rede social de livros</p>
+                </div>
+                <h2>Entrar na sua conta</h2>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="loginEmail">Email</label>
+                        <input type="email" id="loginEmail" class="form-input" placeholder="seu@email.com" required>
                     </div>
-                    <div class="endpoint-tab" onclick="showEndpoint('endpoint2')">
-                        <i class="bi bi-tag"></i> Buscar por Tema
-                        <span class="endpoint-counter">Endpoint 2</span>
+                    <div class="form-group">
+                        <label for="loginSenha">Senha</label>
+                        <input type="password" id="loginSenha" class="form-input" placeholder="Sua senha" required>
                     </div>
-                    <div class="endpoint-tab" onclick="showEndpoint('endpoint3')">
-                        <i class="bi bi-book"></i> Buscar por Título
-                        <span class="endpoint-counter">Endpoint 3</span>
-                    </div>
+                    <button type="submit" class="btn-auth" id="loginBtn">Entrar</button>
+                </form>
+                <div class="auth-switch">
+                    Não tem conta? <a href="#register">Criar conta</a>
                 </div>
             </div>
-        </div>
-
-        <!-- Endpoint 1: ISBN Search -->
-        <div id="endpoint1" class="endpoint-content">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <i class="bi bi-search"></i> Endpoint 1: Buscar Livro por ISBN
-                </div>
-                <div class="card-body">
-                    <p class="text-muted mb-3">
-                        <strong>GET:</strong> <code>/api/livro/livroespecifico/{isbn}</code>
-                    </p>
-                    <div class="row">
-                        <div class="col-md-8">
-                            <label class="form-label" for="isbnInput">ISBN do Livro:</label>
-                            <div class="input-group">
-                                <input 
-                                    type="text" 
-                                    class="form-control" 
-                                    id="isbnInput" 
-                                    placeholder="Ex: 0451524934"
-                                    onkeypress="if(event.key==='Enter') searchByISBN()">
-                                <button class="btn btn-primary" onclick="searchByISBN()">
-                                    <i class="bi bi-search"></i> Buscar
-                                </button>
-                            </div>
-                            <small class="text-muted d-block mt-2">
-                                💡 Dica: Tente "0451524934" ou "0451529944"
-                            </small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div id="results1" class="results-container"></div>
-        </div>
-
-        <!-- Endpoint 2: Theme Search -->
-        <div id="endpoint2" class="endpoint-content d-none">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <i class="bi bi-tag"></i> Endpoint 2: Explorar Livros por Tema
-                </div>
-                <div class="card-body">
-                    <p class="text-muted mb-3">
-                        <strong>GET:</strong> <code>/api/livro/livrostema?tema=VALUE&pagina=VALUE&quantidade=VALUE</code>
-                    </p>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label class="form-label" for="themeInput">Tema:</label>
-                            <input 
-                                type="text" 
-                                class="form-control" 
-                                id="themeInput" 
-                                placeholder="Ex: fantasy, fiction, science"
-                                value="fiction"
-                                onkeypress="if(event.key==='Enter') searchByTheme()">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label" for="pageInput">Página:</label>
-                            <input 
-                                type="number" 
-                                class="form-control" 
-                                id="pageInput" 
-                                value="1"
-                                min="1">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label" for="quantityInput">Quantidade:</label>
-                            <input 
-                                type="number" 
-                                class="form-control" 
-                                id="quantityInput" 
-                                value="10"
-                                min="1"
-                                max="50">
-                        </div>
-                    </div>
-                    <button class="btn btn-success mt-3" onclick="searchByTheme()">
-                        <i class="bi bi-search"></i> Buscar por Tema
-                    </button>
-                    <small class="text-muted d-block mt-2">
-                        💡 Temas populares: fiction, fantasy, science, history, romance
-                    </small>
-                </div>
-            </div>
-            <div id="results2" class="results-container"></div>
-        </div>
-
-        <!-- Endpoint 3: Title Search -->
-        <div id="endpoint3" class="endpoint-content d-none">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <i class="bi bi-book"></i> Endpoint 3: Buscar Livros por Título
-                </div>
-                <div class="card-body">
-                    <p class="text-muted mb-3">
-                        <strong>GET:</strong> <code>/api/livro/livrostitulo?titulo=VALUE&pagina=VALUE&quantidade=VALUE</code>
-                    </p>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label class="form-label" for="titleInput">Título do Livro:</label>
-                            <div class="input-group">
-                                <input 
-                                    type="text" 
-                                    class="form-control" 
-                                    id="titleInput" 
-                                    placeholder="Ex: The Great Gatsby"
-                                    onkeypress="if(event.key==='Enter') searchByTitle()">
-                                <button class="btn btn-warning" onclick="searchByTitle()">
-                                    <i class="bi bi-search"></i> Buscar
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label" for="titlePageInput">Página:</label>
-                            <input 
-                                type="number" 
-                                class="form-control" 
-                                id="titlePageInput" 
-                                value="1"
-                                min="1">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label" for="titleQuantityInput">Quantidade:</label>
-                            <input 
-                                type="number" 
-                                class="form-control" 
-                                id="titleQuantityInput" 
-                                value="10"
-                                min="1"
-                                max="50">
-                        </div>
-                    </div>
-                    <small class="text-muted d-block mt-2">
-                        💡 Dica: Tente "1984", "Pride and Prejudice", "To Kill a Mockingbird"
-                    </small>
-                </div>
-            </div>
-            <div id="results3" class="results-container"></div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        const API_BASE_URL = 'https://letrify.fly.dev/api/livro';
-
-        // UTF-8 Encode for special characters
-        function encodeSpecialChars(str) {
-            return encodeURIComponent(str);
-        }
-
-        // Show/Hide Endpoints
-        function showEndpoint(endpointId) {
-            // Hide all contents
-            document.querySelectorAll('.endpoint-content').forEach(el => {
-                el.classList.add('d-none');
-            });
-            
-            // Remove active class from all tabs
-            document.querySelectorAll('.endpoint-tab').forEach(el => {
-                el.classList.remove('active');
-            });
-            
-            // Show selected content
-            document.getElementById(endpointId).classList.remove('d-none');
-            
-            // Add active class to clicked tab
-            event.target.closest('.endpoint-tab').classList.add('active');
-        }
-
-        // Update API Status
-        function updateApiStatus(message, type) {
-            const statusDiv = document.getElementById('apiStatus');
-            statusDiv.innerHTML = `
-                <div class="api-status ${type}">
-                    <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'hourglass-split'}"></i>
-                    <span>${message}</span>
+    <!-- ==================== AUTH: REGISTER ==================== -->
+    <div id="view-register" class="view d-none">
+        <div class="auth-wrapper">
+            <div class="auth-card">
+                <div class="auth-brand">
+                    <h1>📚 Letrify</h1>
+                    <p>Crie sua conta e comece a ler</p>
                 </div>
-            `;
-        }
-
-        // Display Results
-        function displayResults(data, containerId, isMultiple = true) {
-            const container = document.getElementById(containerId);
-            
-            if (!data || (Array.isArray(data) && data.length === 0)) {
-                container.innerHTML = `
-                    <div class="no-results">
-                        <i class="bi bi-inbox" style="font-size: 2rem;"></i>
-                        <p>Nenhum resultado encontrado.</p>
+                <h2>Criar Conta</h2>
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label for="regNome">Nome</label>
+                        <input type="text" id="regNome" class="form-input" placeholder="Seu nome" required>
                     </div>
-                `;
-                return;
-            }
-
-            const books = Array.isArray(data) ? data : [data];
-            let html = '';
-
-            books.forEach((book, index) => {
-                html += createBookCard(book, index + 1);
-            });
-
-            container.innerHTML = `
-                <div class="alert alert-success alert-custom">
-                    <i class="bi bi-check-circle"></i> 
-                    ${books.length} livro(s) encontrado(s)
+                    <div class="form-group">
+                        <label for="regEmail">Email</label>
+                        <input type="email" id="regEmail" class="form-input" placeholder="seu@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="regSenha">Senha</label>
+                        <input type="password" id="regSenha" class="form-input" placeholder="Mínimo 6 caracteres" required minlength="6">
+                    </div>
+                    <button type="submit" class="btn-auth" id="registerBtn">Criar Conta</button>
+                </form>
+                <div class="auth-switch">
+                    Já tem conta? <a href="#login">Entrar</a>
                 </div>
-                ${html}
-            `;
-        }
+            </div>
+        </div>
+    </div>
 
-        // Create Book Card
-        function createBookCard(book, index) {
-            const themes = book.temas && book.temas.length > 0 
-                ? book.temas.map(t => `<span class="badge bg-info badge-custom">${t}</span>`).join(' ')
-                : '<span class="badge bg-secondary badge-custom">Sem temas</span>';
+    <!-- ==================== PERFIL ==================== -->
+    <div id="view-perfil" class="view d-none">
+        <div class="main-container">
+            <!-- Profile Header -->
+            <div class="profile-header">
+                <div class="profile-avatar" id="profileAvatar">
+                    <div class="avatar-placeholder"><i class="bi bi-person-fill"></i></div>
+                </div>
+                <div class="profile-info">
+                    <div class="profile-name" id="profileName">Carregando...</div>
+                    <div class="profile-city" id="profileCity" style="display:none"></div>
+                    <div class="profile-bio" id="profileBio" style="display:none"></div>
+                </div>
+                <button class="btn-edit-profile" onclick="openEditProfileModal()" title="Editar perfil">
+                    <i class="bi bi-pencil-fill"></i>
+                </button>
+            </div>
 
-            return `
-                <div class="book-card">
-                    <div class="book-title">
-                        <i class="bi bi-book"></i> ${index}. ${book.titulo || 'Título desconhecido'}
+            <!-- Two-Column Layout -->
+            <div class="profile-content">
+                <!-- LEFT: Bookshelf -->
+                <div class="profile-left">
+                    <!-- Stats Card -->
+                    <div class="stats-card">
+                        <div class="stats-main">
+                            <span class="num-big" id="statTotal">0</span>
+                            <span class="label-big">Livros</span>
+                        </div>
+                        <div class="stats-pills">
+                            <div class="stat-pill">
+                                <span class="stat-num" id="statLendo">0</span> Lendo agora
+                            </div>
+                            <div class="stat-pill">
+                                <span class="stat-num" id="statLido">0</span> Já li
+                            </div>
+                        </div>
                     </div>
-                    <div class="book-info">
-                        <div class="info-item">
-                            <span class="info-label"><i class="bi bi-hash"></i> ISBN</span>
-                            <div class="info-value">${book.isbn || 'N/A'}</div>
+
+                    <!-- Add Book Button -->
+                    <button class="add-book-floating" onclick="openAddBookModal()">
+                        <i class="bi bi-plus-lg"></i> Adicionar livro
+                    </button>
+
+                    <!-- Shelf Tabs -->
+                    <div class="shelf-tabs">
+                        <button class="shelf-tab active" data-tab="lendo" onclick="showShelfTab('lendo')">
+                            <i class="bi bi-book-half"></i> Lendo agora
+                            <span class="tab-count" id="tabCountLendo">0</span>
+                        </button>
+                        <button class="shelf-tab" data-tab="lido" onclick="showShelfTab('lido')">
+                            <i class="bi bi-check2-circle"></i> Já li
+                            <span class="tab-count" id="tabCountLido">0</span>
+                        </button>
+                        <button class="shelf-tab" data-tab="queroLer" onclick="showShelfTab('queroLer')">
+                            <i class="bi bi-bookmark-star"></i> Quero ler
+                            <span class="tab-count" id="tabCountQueroLer">0</span>
+                        </button>
+                    </div>
+
+                    <!-- Book Lists -->
+                    <div id="listLendo" class="shelf-list"></div>
+                    <div id="listLido" class="shelf-list d-none"></div>
+                    <div id="listQueroLer" class="shelf-list d-none"></div>
+                </div>
+
+                <!-- RIGHT: Sidebar -->
+                <div class="profile-right">
+                    <!-- Amigos Compatíveis (Placeholder) -->
+                    <div class="sidebar-card">
+                        <div class="sidebar-title">Amigos Compatíveis</div>
+                        <select class="compat-dropdown">
+                            <option>Mostrar compatibilidade alta</option>
+                            <option>Mostrar todos</option>
+                        </select>
+
+                        <!-- Mock Friend 1 -->
+                        <div class="friend-card">
+                            <div class="friend-avatar">M</div>
+                            <div class="friend-info">
+                                <div class="friend-name">Maria</div>
+                                <div class="friend-compat"><i class="bi bi-fire"></i> 75% compatível</div>
+                                <div class="friend-tags">
+                                    <span class="friend-tag">Fantasia</span>
+                                    <span class="friend-tag">Ficção Científica</span>
+                                </div>
+                                <div class="friend-actions">
+                                    <button class="btn-friend primary"><i class="bi bi-plus"></i> Seguir</button>
+                                    <button class="btn-friend"><i class="bi bi-search"></i> Ver estante</button>
+                                    <button class="btn-friend"><i class="bi bi-star"></i> Ver perfil</button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="info-item">
-                            <span class="info-label"><i class="bi bi-pen"></i> Autor Principal</span>
-                            <div class="info-value">${book.autorPrincipal || 'Desconhecido'}</div>
+
+                        <!-- Mock Friend 2 -->
+                        <div class="friend-card">
+                            <div class="friend-avatar" style="background: linear-gradient(135deg, #00B894, #00CEC9);">J</div>
+                            <div class="friend-info">
+                                <div class="friend-name">João</div>
+                                <div class="friend-compat"><i class="bi bi-fire"></i> 68% compatível</div>
+                                <div class="friend-tags">
+                                    <span class="friend-tag">Fantasia</span>
+                                    <span class="friend-tag">Aventura</span>
+                                    <span class="friend-tag">Ficção</span>
+                                </div>
+                                <div class="friend-actions">
+                                    <button class="btn-friend primary"><i class="bi bi-plus"></i> Seguir</button>
+                                    <button class="btn-friend"><i class="bi bi-search"></i> Ver estante</button>
+                                    <button class="btn-friend"><i class="bi bi-star"></i> Ver perfil</button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="info-item">
-                            <span class="info-label"><i class="bi bi-building"></i> Editora</span>
-                            <div class="info-value">${book.editora || 'N/A'}</div>
+
+                        <!-- Mock Friend 3 -->
+                        <div class="friend-card">
+                            <div class="friend-avatar" style="background: linear-gradient(135deg, #E84393, #FD79A8);">A</div>
+                            <div class="friend-info">
+                                <div class="friend-name">Ana</div>
+                                <div class="friend-compat"><i class="bi bi-fire"></i> 54% compatível</div>
+                                <div class="friend-tags">
+                                    <span class="friend-tag">Fantasia</span>
+                                    <span class="friend-tag">Ficção Científica</span>
+                                </div>
+                                <div class="friend-actions">
+                                    <button class="btn-friend primary"><i class="bi bi-plus"></i> Seguir</button>
+                                    <button class="btn-friend"><i class="bi bi-search"></i> Ver estante</button>
+                                    <button class="btn-friend"><i class="bi bi-star"></i> Ver perfil</button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="info-item">
-                            <span class="info-label"><i class="bi bi-calendar"></i> Data de Publicação</span>
-                            <div class="info-value">${book.dataPublicacao || 'N/A'}</div>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label"><i class="bi bi-file-earmark"></i> Páginas</span>
-                            <div class="info-value">${book.paginas || 'N/A'}</div>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label"><i class="bi bi-tags"></i> Temas</span>
-                            <div class="info-value mt-2">${themes}</div>
+
+                        <div class="sidebar-stats">
+                            <div class="sidebar-stat">
+                                <div class="sidebar-stat-num"><i class="bi bi-people-fill" style="color:var(--primary)"></i> 25</div>
+                                <div class="sidebar-stat-label">Amigos</div>
+                            </div>
+                            <div class="sidebar-stat">
+                                <div class="sidebar-stat-num"><i class="bi bi-heart-fill" style="color:var(--secondary)"></i> 14</div>
+                                <div class="sidebar-stat-label">Seguindo</div>
+                            </div>
+                            <div class="sidebar-stat">
+                                <div class="sidebar-stat-num"><i class="bi bi-hand-thumbs-up-fill" style="color:var(--primary)"></i> 27</div>
+                                <div class="sidebar-stat-label">Curtidas</div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            `;
-        }
+            </div>
+        </div>
+    </div>
 
-        // Search by ISBN - Endpoint 1
-        async function searchByISBN() {
-            const isbn = document.getElementById('isbnInput').value.trim();
-            
-            if (!isbn) {
-                updateApiStatus('Por favor, insira um ISBN válido', 'error');
-                return;
-            }
+    <!-- ==================== PLACEHOLDER: HOME ==================== -->
+    <div id="view-home" class="view d-none">
+        <div class="placeholder-page">
+            <div class="placeholder-card">
+                <i class="bi bi-house-heart"></i>
+                <h2>Home</h2>
+                <p>Em breve você verá aqui as atualizações dos seus amigos, recomendações personalizadas e as últimas novidades literárias.</p>
+            </div>
+        </div>
+    </div>
 
-            const resultsContainer = document.getElementById('results1');
-            resultsContainer.innerHTML = '<div class="loading"><div class="spinner"></div> Buscando...</div>';
-            updateApiStatus('Connecting to API...', 'loading');
+    <!-- ==================== PLACEHOLDER: MINHA ESTANTE ==================== -->
+    <div id="view-estante" class="view d-none">
+        <div class="placeholder-page">
+            <div class="placeholder-card">
+                <i class="bi bi-bookshelf"></i>
+                <h2>Minha Estante</h2>
+                <p>Aqui será a visão completa da sua estante virtual com filtros avançados, estatísticas de leitura e metas. Por enquanto, gerencie seus livros pelo <a href="#perfil" style="color:var(--primary);font-weight:600;">Perfil</a>.</p>
+            </div>
+        </div>
+    </div>
 
-            try {
-                const response = await fetch(`${API_BASE_URL}/livroespecifico/${encodeSpecialChars(isbn)}`);
-                
-                if (!response.ok) {
-                    throw new Error(`Erro: ${response.status} - ${response.statusText}`);
-                }
+    <!-- ==================== PLACEHOLDER: EXPLORAR ==================== -->
+    <div id="view-explorar" class="view d-none">
+        <div class="placeholder-page">
+            <div class="placeholder-card">
+                <i class="bi bi-compass"></i>
+                <h2>Explorar</h2>
+                <p>Em breve: descubra novos livros por gênero, veja o que está em alta na comunidade e encontre sua próxima leitura favorita.</p>
+            </div>
+        </div>
+    </div>
 
-                const data = await response.json();
-                displayResults(data, 'results1', false);
-                updateApiStatus('✓ Busca por ISBN concluída com sucesso!', 'success');
-            } catch (error) {
-                console.error(error);
-                resultsContainer.innerHTML = `
-                    <div class="alert alert-danger alert-custom">
-                        <i class="bi bi-exclamation-circle"></i>
-                        <strong>Erro ao buscar:</strong> ${error.message}
-                    </div>
-                `;
-                updateApiStatus(`Erro: ${error.message}`, 'error');
-            }
-        }
+    <!-- ==================== MODAL: EDIT PROFILE ==================== -->
+    <div id="editProfileModal" class="modal-overlay" onclick="handleModalOverlayClick(event, 'editProfileModal')">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2><i class="bi bi-pencil-square"></i> Editar Perfil</h2>
+                <button class="modal-close" onclick="closeEditProfileModal()">&times;</button>
+            </div>
+            <div class="edit-photo-section">
+                <img id="editFotoPreview" class="edit-photo-preview" alt="Preview" style="display:none">
+                <div>
+                    <label for="editFoto" style="cursor:pointer;color:var(--primary);font-weight:600;font-size:0.9rem;">
+                        <i class="bi bi-camera"></i> Alterar foto
+                    </label>
+                    <input type="file" id="editFoto" accept="image/*" style="display:none" onchange="previewEditPhoto(this)">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="editIdade">Idade</label>
+                <input type="number" id="editIdade" class="form-input" placeholder="Sua idade" min="1" max="120">
+            </div>
+            <div class="form-group">
+                <label for="editCidade">Cidade</label>
+                <input type="text" id="editCidade" class="form-input" placeholder="Ex: São Paulo, Brasil">
+            </div>
+            <div class="form-group">
+                <label for="editDescricao">Bio</label>
+                <textarea id="editDescricao" class="form-input" rows="3" placeholder="Fale um pouco sobre você e suas leituras..."></textarea>
+            </div>
+            <button class="btn-save-profile" id="saveProfileBtn" onclick="saveProfile()">Salvar Alterações</button>
+        </div>
+    </div>
 
-        // Search by Theme - Endpoint 2
-        async function searchByTheme() {
-            const tema = document.getElementById('themeInput').value.trim();
-            const pagina = document.getElementById('pageInput').value || 1;
-            const quantidade = document.getElementById('quantityInput').value || 10;
+    <!-- ==================== MODAL: ADD BOOK ==================== -->
+    <div id="addBookModal" class="modal-overlay" onclick="handleModalOverlayClick(event, 'addBookModal')">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2><i class="bi bi-book"></i> Adicionar Livro</h2>
+                <button class="modal-close" onclick="closeAddBookModal()">&times;</button>
+            </div>
+            <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:16px;">
+                Busque um livro e adicione à sua estante.
+            </p>
+            <div class="search-bar">
+                <input type="text" id="addBookSearch" placeholder="Buscar livro...">
+                <button onclick="searchBooksToAdd()">
+                    <i class="bi bi-search"></i> Buscar
+                </button>
+            </div>
+            <div class="search-filters">
+                <select id="searchType">
+                    <option value="titulo">🔤 Por título</option>
+                    <option value="autor">✍️ Por autor</option>
+                    <option value="tema">🏷️ Por tema/gênero</option>
+                </select>
+                <select id="searchSort">
+                    <option value="">📊 Relevância</option>
+                    <option value="new">📅 Mais recentes</option>
+                    <option value="old">📅 Mais antigos</option>
+                </select>
+                <select id="searchQty">
+                    <option value="20">20 resultados</option>
+                    <option value="40">40 resultados</option>
+                    <option value="60">60 resultados</option>
+                </select>
+            </div>
+            <div id="searchResults"></div>
+        </div>
+    </div>
 
-            if (!tema) {
-                updateApiStatus('Por favor, insira um tema válido', 'error');
-                return;
-            }
-
-            const resultsContainer = document.getElementById('results2');
-            resultsContainer.innerHTML = '<div class="loading"><div class="spinner"></div> Buscando por tema...</div>';
-            updateApiStatus('Connecting to API...', 'loading');
-
-            try {
-                const url = `${API_BASE_URL}/livrostema?tema=${encodeSpecialChars(tema)}&pagina=${pagina}&quantidade=${quantidade}`;
-                const response = await fetch(url);
-
-                if (!response.ok) {
-                    throw new Error(`Erro: ${response.status} - ${response.statusText}`);
-                }
-
-                const data = await response.json();
-                displayResults(data, 'results2', true);
-                updateApiStatus(`✓ Busca por tema concluída! ${data.length} livro(s) encontrado(s)`, 'success');
-            } catch (error) {
-                console.error(error);
-                resultsContainer.innerHTML = `
-                    <div class="alert alert-danger alert-custom">
-                        <i class="bi bi-exclamation-circle"></i>
-                        <strong>Erro ao buscar:</strong> ${error.message}
-                    </div>
-                `;
-                updateApiStatus(`Erro: ${error.message}`, 'error');
-            }
-        }
-
-        // Search by Title - Endpoint 3
-        async function searchByTitle() {
-            const titulo = document.getElementById('titleInput').value.trim();
-            const pagina = document.getElementById('titlePageInput').value || 1;
-            const quantidade = document.getElementById('titleQuantityInput').value || 10;
-
-            if (!titulo) {
-                updateApiStatus('Por favor, insira um título válido', 'error');
-                return;
-            }
-
-            const resultsContainer = document.getElementById('results3');
-            resultsContainer.innerHTML = '<div class="loading"><div class="spinner"></div> Buscando por título...</div>';
-            updateApiStatus('Connecting to API...', 'loading');
-
-            try {
-                const url = `${API_BASE_URL}/livrostitulo?titulo=${encodeSpecialChars(titulo)}&pagina=${pagina}&quantidade=${quantidade}`;
-                const response = await fetch(url);
-
-                if (!response.ok) {
-                    throw new Error(`Erro: ${response.status} - ${response.statusText}`);
-                }
-
-                const data = await response.json();
-                displayResults(data, 'results3', true);
-                updateApiStatus(`✓ Busca por título concluída! ${data.length} livro(s) encontrado(s)`, 'success');
-            } catch (error) {
-                console.error(error);
-                resultsContainer.innerHTML = `
-                    <div class="alert alert-danger alert-custom">
-                        <i class="bi bi-exclamation-circle"></i>
-                        <strong>Erro ao buscar:</strong> ${error.message}
-                    </div>
-                `;
-                updateApiStatus(`Erro: ${error.message}`, 'error');
-            }
-        }
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('✓ Frontend carregado com sucesso!');
-            console.log('API Base URL:', API_BASE_URL);
-        });
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>

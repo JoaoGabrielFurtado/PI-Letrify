@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace pi_projetolivros.DTO;
+namespace pi_projetolivros.DTO.ConectarApiLivros;
 
 public class RecebeLivrosDTO
 {

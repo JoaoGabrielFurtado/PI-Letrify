@@ -107,6 +107,7 @@ Rede social de livros que utiliza a [Open Library API](https://openlibrary.org/)
 | `POST` | `/api/usuario/meus-livros` | Adicionar livro à estante | ✅ |
 | `GET` | `/api/usuario/{id}/livros` | Ver estante de um usuário | ❌ |
 | `DELETE` | `/api/usuario/meus-livros/{livroId}` | Remover livro da estante | ✅ |
+| `DELETE` | `/api/usuario/deletar` | Excluir a própria conta e dados | ✅ |
 
 **Detalhes:**
 
@@ -131,6 +132,12 @@ Rede social de livros que utiliza a [Open Library API](https://openlibrary.org/)
 * **Remover Livro da Estante** 🔒
   * **Rota:** `DELETE /api/usuario/meus-livros/{livroId}`
   * **Header:** `Authorization: Bearer {token}`
+
+* **Excluir Conta** 🔒 
+  * **Rota:** `DELETE /api/usuario/deletar`
+  * **Descrição:** Remove permanentemente a conta do usuário logado, incluindo sua estante de livros, e exclui a foto de perfil do servidor.
+  * **Header:** `Authorization: Bearer {token}`
+  * **Retorno:** `{ "message": "Conta do usuário e seus dados foram removidos com sucesso." }`
 
 ---
 

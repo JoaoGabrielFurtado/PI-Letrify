@@ -257,7 +257,7 @@ function createShelfBookCard(book, status) {
                 </div>
             </div>
             <div class="shelf-book-info">
-                <div class="shelf-book-title">${book.titulo || 'Sem título'}</div>
+                <div class="shelf-book-title" title="${book.titulo || 'Sem título'}">${book.titulo || 'Sem título'}</div>
                 <div class="shelf-book-author">${book.autor || 'Autor desconhecido'}</div>
                 ${isbn ? `<div class="shelf-book-isbn"><i class="bi bi-upc-scan"></i> ${isbn}</div>` : ''}
                 <div class="shelf-book-actions">
@@ -379,7 +379,7 @@ async function searchBooksToAdd() {
                     <span class="cover-fallback-sm" style="display:none">${initials}</span>
                 </div>
                 <div class="search-result-info">
-                    <div class="search-result-title">${sr.titulo}</div>
+                    <div class="search-result-title" title="${sr.titulo}">${sr.titulo}</div>
                     <div class="search-result-author">${sr.autor}</div>
                     <div class="search-result-isbn">ISBN: ${sr.isbn}</div>
                 </div>
@@ -501,6 +501,20 @@ async function saveProfile() {
     } finally {
         btn.disabled = false;
         btn.textContent = 'Salvar Alterações';
+    }
+}
+
+async function deleteAccount() {
+    if (!confirm('Tem certeza absoluta que deseja excluir sua conta? Esta ação não pode ser desfeita e todos os seus livros serão apagados.')) {
+        return;
+    }
+
+    try {
+        await apiDelete('/api/usuario/deletar');
+        showToast('Conta excluída com sucesso.', 'success');
+        logout();
+    } catch (err) {
+        showToast(`Erro ao excluir conta: ${err.message}`, 'error');
     }
 }
 

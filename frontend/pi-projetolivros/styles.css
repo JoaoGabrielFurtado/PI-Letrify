@@ -409,9 +409,6 @@ body {
 }
 
 .btn-edit-profile {
-    position: absolute;
-    top: 20px;
-    right: 24px;
     background: var(--primary-bg);
     border: none;
     border-radius: 50%;
@@ -605,6 +602,9 @@ body {
     color: var(--text);
     margin-bottom: 3px;
     line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .shelf-book-author {

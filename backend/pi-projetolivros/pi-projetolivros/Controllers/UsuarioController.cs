@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using pi_projetolivros.DTO;
@@ -191,4 +191,35 @@ public class UsuarioController : ControllerBase
 
         return Ok(new { message = "Livro removido da sua lista com sucesso!" });
     }
+
+    [HttpDelete("deletar")]
+    [Authorize]
+    public async Task<IActionResult> DeletarUsuario()
+    {
+        var usuarioIdText = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(usuarioIdText, out int usuarioId))
+            return Unauthorized("Token inválido.");
+
+        var usuario = await _contexto.Usuarios.FirstOrDefaultAsync(u => u.Id == usuarioId);
+        if (usuario == null)
+            return NotFound("Usuário não encontrado ou já foi deletado.");
+
+        if (!string.IsNullOrEmpty(usuario.FotoPerfil))
+        {
+            var nomeArquivo = usuario.FotoPerfil.Replace("/fotos/", "");
+
+            var caminhoFisico = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "fotos", nomeArquivo);
+
+            if (System.IO.File.Exists(caminhoFisico))
+            {
+                System.IO.File.Delete(caminhoFisico);
+            }
+        }
+
+        _contexto.Usuarios.Remove(usuario);
+        await _contexto.SaveChangesAsync();
+
+        return Ok(new { message = "Conta do usuário e seus dados foram removidos com sucesso." });
+    }
+
 }

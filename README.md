@@ -133,7 +133,7 @@ Rede social de livros que utiliza a [Open Library API](https://openlibrary.org/)
   * **Rota:** `DELETE /api/usuario/meus-livros/{livroId}`
   * **Header:** `Authorization: Bearer {token}`
 
-* **Excluir Conta** 🔒 *(novo)*
+* **Excluir Conta** 🔒 
   * **Rota:** `DELETE /api/usuario/deletar`
   * **Descrição:** Remove permanentemente a conta do usuário logado, incluindo sua estante de livros, e exclui a foto de perfil do servidor.
   * **Header:** `Authorization: Bearer {token}`

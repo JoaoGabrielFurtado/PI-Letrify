@@ -107,7 +107,10 @@ Rede social de livros que utiliza a [Open Library API](https://openlibrary.org/)
 | `POST` | `/api/usuario/meus-livros` | Adicionar livro à estante | ✅ |
 | `GET` | `/api/usuario/{id}/livros` | Ver estante de um usuário | ❌ |
 | `DELETE` | `/api/usuario/meus-livros/{livroId}` | Remover livro da estante | ✅ |
+<<<<<<< HEAD
 | `DELETE` | `/api/usuario/deletar` | Excluir a própria conta e dados | ✅ |
+=======
+>>>>>>> devEnzo
 
 **Detalhes:**
 
@@ -133,12 +136,15 @@ Rede social de livros que utiliza a [Open Library API](https://openlibrary.org/)
   * **Rota:** `DELETE /api/usuario/meus-livros/{livroId}`
   * **Header:** `Authorization: Bearer {token}`
 
+<<<<<<< HEAD
 * **Excluir Conta** 🔒 
   * **Rota:** `DELETE /api/usuario/deletar`
   * **Descrição:** Remove permanentemente a conta do usuário logado, incluindo sua estante de livros, e exclui a foto de perfil do servidor.
   * **Header:** `Authorization: Bearer {token}`
   * **Retorno:** `{ "message": "Conta do usuário e seus dados foram removidos com sucesso." }`
 
+=======
+>>>>>>> devEnzo
 ---
 
 ## 🛠 Tecnologias Utilizadas
@@ -150,4 +156,8 @@ Rede social de livros que utiliza a [Open Library API](https://openlibrary.org/)
 | Autenticação | JWT (JSON Web Token) + BCrypt |
 | Frontend | HTML5, CSS3, JavaScript (Vanilla) |
 | API Externa | Open Library API |
+<<<<<<< HEAD
 | Ícones | Bootstrap Icons |
+=======
+| Ícones | Bootstrap Icons |
+>>>>>>> devEnzo

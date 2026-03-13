@@ -140,6 +140,7 @@ Rede social de livros que utiliza a [Open Library API](https://openlibrary.org/)
   * **Header:** `Authorization: Bearer {token}`
   * **Retorno:** `{ "message": "Conta do usuário e seus dados foram removidos com sucesso." }`
 
+---
 
 ## 🛠 Tecnologias Utilizadas
 
@@ -150,12 +151,6 @@ Rede social de livros que utiliza a [Open Library API](https://openlibrary.org/)
 | Autenticação | JWT (JSON Web Token) + BCrypt |
 | Frontend | HTML5, CSS3, JavaScript (Vanilla) |
 | API Externa | Open Library API |
-<<<<<<< HEAD
-<<<<<<< HEAD
 | Ícones | Bootstrap Icons |
-=======
 | Ícones | Bootstrap Icons |
->>>>>>> devEnzo
-=======
 | Ícones | Bootstrap Icons |
->>>>>>> devEnzo

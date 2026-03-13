@@ -204,6 +204,18 @@ body {
     color: var(--text);
 }
 
+[data-theme="dark"] .form-input:focus {
+    background: var(--bg-alt);
+    color: var(--text);
+}
+
+[data-theme="dark"] .form-input:-webkit-autofill,
+[data-theme="dark"] .form-input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px var(--bg-alt) inset !important;
+    -webkit-text-fill-color: var(--text) !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
 [data-theme="dark"] .status-select,
 [data-theme="dark"] .compat-dropdown {
     background: var(--bg-alt);
@@ -409,9 +421,6 @@ body {
 }
 
 .btn-edit-profile {
-    position: absolute;
-    top: 20px;
-    right: 24px;
     background: var(--primary-bg);
     border: none;
     border-radius: 50%;
@@ -605,6 +614,9 @@ body {
     color: var(--text);
     margin-bottom: 3px;
     line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .shelf-book-author {

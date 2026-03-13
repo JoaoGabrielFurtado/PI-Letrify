@@ -115,9 +115,14 @@
                     <div class="profile-city" id="profileCity" style="display:none"></div>
                     <div class="profile-bio" id="profileBio" style="display:none"></div>
                 </div>
-                <button class="btn-edit-profile" onclick="openEditProfileModal()" title="Editar perfil">
-                    <i class="bi bi-pencil-fill"></i>
-                </button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-edit-profile" onclick="openEditProfileModal()" title="Editar perfil">
+                        <i class="bi bi-pencil-fill"></i>
+                    </button>
+                    <button class="btn-edit-profile" onclick="deleteAccount()" title="Excluir conta" style="color: #ff6b6b;">
+                        <i class="bi bi-trash3-fill"></i>
+                    </button>
+                </div>
             </div>
 
             <!-- Two-Column Layout -->

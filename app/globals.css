@@ -1,26 +1,46 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* 1. TEMA VERDE (Padrão) */
+:root, [data-theme="verde"] {
+  --cor-fundo-app: #F5F1E8;      /* Bege claro */
+  --cor-fundo-sidebar: #1F3A3D;  /* Verde escuro */
+  --cor-fundo-card: #FFFFFF;     /* Branco */
+  --cor-texto-principal: #1f2937;
+  --cor-texto-secundario: #4b5563;
+  --cor-texto-sidebar: #FFFFFF;  /* Ícones brancos */
+  --cor-botao-primario: #2F855A; /* Verde médio */
+  --cor-botao-texto: #FFFFFF;
+  --cor-destaque: #D69E2E;       /* Dourado para detalhes */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* 2. TEMA LARANJA */
+[data-theme="laranja"] {
+  --cor-fundo-app: #FFFaf0;      /* Creme */
+  --cor-fundo-sidebar: #7B341E;  /* Laranja escuro / Ferrugem */
+  --cor-fundo-card: #FFFFFF;     /* Branco */
+  --cor-texto-principal: #2d3748;
+  --cor-texto-secundario: #718096;
+  --cor-texto-sidebar: #FFFFFF;
+  --cor-botao-primario: #DD6B20; /* Laranja vibrante */
+  --cor-botao-texto: #FFFFFF;
+  --cor-destaque: #319795;       /* Verde água para contraste */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* 3. TEMA ESCURO */
+[data-theme="escuro"] {
+  --cor-fundo-app: #121212;      /* Quase preto */
+  --cor-fundo-sidebar: #000000;  /* Preto absoluto */
+  --cor-fundo-card: #1E1E1E;     /* Cinza escuro para os cards */
+  --cor-texto-principal: #E2E8F0;
+  --cor-texto-secundario: #A0AEC0;
+  --cor-texto-sidebar: #E2E8F0;
+  --cor-botao-primario: #805AD5; /* Roxo Letrify */
+  --cor-botao-texto: #FFFFFF;
+  --cor-destaque: #F6E05E;       /* Amarelo vivo */
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--cor-fundo-app);
+  color: var(--cor-texto-principal);
+  transition: all 0.3s ease;
 }

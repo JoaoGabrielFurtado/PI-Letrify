@@ -3,17 +3,22 @@
 Rede social de livros que utiliza a [Open Library API](https://openlibrary.org/) para explorar, buscar e exibir informações detalhadas sobre livros. Os usuários podem criar uma conta, montar sua estante pessoal e organizar seus livros por status de leitura.
 
 ## 📁 Estrutura do Projeto
-- **/backend**: API construída em .NET 9 (C#) com PostgreSQL (Supabase)
-- **/frontend**: SPA (Single Page Application) em HTML, CSS e JavaScript puro
+- **/backend**: API construída em .NET 9 (C#) com SQL Server (Azure) e Integração com IA.
+- **/frontend**: SPA (Single Page Application) em HTML, CSS e JavaScript puro.
+- **Banco Vetorial**: Qdrant Cloud para armazenamento e busca de similaridade (Vector Search).
+- **IA**: Google Gemini API para geração de *embeddings* (vetores de interesse literário).
 
 ---
 
 ## 🚀 Como rodar o Backend
 1. Abra a pasta `/backend` no Visual Studio 2022.
-2. Restaure os pacotes NuGet.
-3. Configure a connection string do PostgreSQL em `appsettings.json`.
-4. Aperte `F5` ou execute `dotnet run` no terminal.
-5. Faça o teste no Postman/Swagger/Navegador.
+2. **Configuração de Segredos:**
+   - O projeto utiliza um sistema de proteção de chaves. Localize o arquivo `appsettings.example.json`.
+   - Crie uma cópia chamada `appsettings.json`.
+   - Insira suas credenciais da **Azure**, **Gemini API**, **Qdrant** e a **Chave Mestra**.
+3. Restaure os pacotes NuGet.
+4. Execute as Migrations para o SQL Server (se necessário).
+5. Aperte `F5` ou execute `dotnet run` no terminal.
 
 ---
 
@@ -36,6 +41,13 @@ Rede social de livros que utiliza a [Open Library API](https://openlibrary.org/)
 - **Busca de Livros** — por título, autor ou tema/gênero (com filtros de ordenação e quantidade)
 - **Capas dos Livros** — carregadas automaticamente pela Open Library via ISBN
 - **Dark/Light Mode** — tema salvo no navegador
+
+### 🎨 Funcionalidades Backend
+- **IA Match System:** Sistema de recomendação que analisa os temas dos livros na estante do usuário e gera um perfil vetorial via **Gemini 1.5 Flash**.
+- **Busca por Similaridade:** Utiliza o motor de busca do **Qdrant** para encontrar usuários com "coordenadas literárias" próximas em um espaço multidimensional.
+- **Data Seeding Pro:** Script automatizado com a biblioteca **Bogus** capaz de gerar e vetorizar milhares de usuários realistas para testes de carga e performance.
+- **Segurança Blindada:** Endpoints de manutenção e carga de dados protegidos por cabeçalhos de segurança personalizados (`X-Chave-Mestra`).
+- **Tratamento de Dados Externos:** Integração robusta com a Open Library API, incluindo *fallbacks* para livros sem gêneros definidos.
 
 ---
 
@@ -98,6 +110,24 @@ Rede social de livros que utiliza a [Open Library API](https://openlibrary.org/)
 
 ---
 
+### 🤖 IA & Match (`/api/match`)
+
+| Método | Rota | Descrição | Auth |
+|--------|------|-----------|------|
+| `POST` | `/api/match` | Retorna os 5 usuários com maior afinidade literária via Qdrant | ✅ |
+
+---
+
+### ⚡ População de Dados (`/api/seed`)
+
+| Método | Rota | Descrição | Auth |
+|--------|------|-----------|------|
+| `POST` | `/api/seed/gerar/{qtd}` | Gera usuários falsos, salva no SQL e vetoriza no Qdrant | 🔑* |
+
+> *🔑 Requer Header `X-Chave-Mestra` definido nas configurações do servidor.
+
+---
+
 ### 👤 Usuário (`/api/usuario`)
 
 | Método | Rota | Descrição | Auth |
@@ -146,11 +176,20 @@ Rede social de livros que utiliza a [Open Library API](https://openlibrary.org/)
 
 | Camada | Tecnologia |
 |--------|-----------|
-| Backend | .NET 9, C#, Entity Framework Core |
-| Banco de Dados | PostgreSQL (Supabase) |
-| Autenticação | JWT (JSON Web Token) + BCrypt |
-| Frontend | HTML5, CSS3, JavaScript (Vanilla) |
-| API Externa | Open Library API |
-| Ícones | Bootstrap Icons |
-| Ícones | Bootstrap Icons |
-| Ícones | Bootstrap Icons |
+| **Backend** | .NET 9, C#, Entity Framework Core |
+| **Banco de Dados Relacional** | SQL Server (Azure) |
+| **Banco de Dados Vetorial** | Qdrant (Vector Database) |
+| **Inteligência Artificial** | Google Gemini API (Embeddings) |
+| **Geração de Dados** | Bogus (Fake Data Generator) |
+| **Autenticação** | JWT (JSON Web Token) + BCrypt |
+| **Frontend** | HTML5, CSS3, JavaScript (Vanilla) |
+| **API Externa** | Open Library API |
+
+---
+
+## ⚙️ Configurações de Ambiente
+O projeto separa chaves sensíveis do código-fonte através do `.gitignore`. Para rodar o ambiente completo, configure o `appsettings.json` com:
+- `Jwt:Key`: Chave para assinatura dos tokens.
+- `Gemini:ApiKey`: Chave de acesso ao Google AI Studio.
+- `Qdrant:Url` / `ApiKey`: Endereço e chave do cluster vetorial.
+- `SegurancaDaApi:ChaveMestraSeed`: Senha de proteção para endpoints de infraestrutura.

@@ -14,9 +14,9 @@ export default function Sidebar() {
         <Link href="/" title="Meu Feed" className="hover:opacity-70 transition-opacity hover:-translate-y-1 transform duration-200" style={{ color: 'var(--cor-destaque)' }}>
           🏠
         </Link>
-        <span title="Comunidade" className="opacity-40 cursor-not-allowed">
+        <Link href="/grupos" title="Matchs" className="hover:opacity-70 transition-opacity hover:-translate-y-1 transform duration-200" style={{ color: 'var(--cor-destaque)' }}>
           👥
-        </span>
+        </Link>
         <Link href="/busca" title="Buscar Livros" className="hover:opacity-70 transition-opacity hover:-translate-y-1 transform duration-200" style={{ color: 'var(--cor-destaque)' }}>
           🔍
         </Link>

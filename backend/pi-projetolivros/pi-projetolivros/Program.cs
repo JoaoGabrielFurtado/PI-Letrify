@@ -1,17 +1,17 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using pi_projetolivros_banco;
+using Microsoft.IdentityModel.Tokens;
+using pi_projetolivros.Serviços;
 using pi_projetolivros_banco;
 using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-var connectionString = builder.Configuration.GetConnectionString("ConexaoSupabase");
+var connectionString = builder.Configuration.GetConnectionString("Azure");
 builder.Services.AddDbContext<Banco>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseSqlServer(connectionString));
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
@@ -55,15 +55,8 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("PermitirTudo", policy =>
-    {
-        policy.AllowAnyOrigin()  // Permite qualquer origem 
-              .AllowAnyHeader()  // Permite qualquer cabeçalho 
-              .AllowAnyMethod(); // Permite qualquer método 
-    });
-});
+builder.Services.AddHttpClient<GeminiServices>();
+builder.Services.AddSingleton<QdrantServices>();
 
 var app = builder.Build();
 

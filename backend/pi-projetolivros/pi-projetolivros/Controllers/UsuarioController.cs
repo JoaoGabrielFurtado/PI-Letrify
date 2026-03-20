@@ -94,12 +94,11 @@ public class UsuarioController : ControllerBase
         if (!statusPermitidos.Contains(dto.Status))
             return BadRequest("Status inválido. Use apenas: 'Lendo', 'Lido' ou 'Quero Ler'.");
 
-        // Busca por Titulo+Autor OU por ISBN (evita violação da constraint unique no isbn)
         var livroLocal = await _contexto.Livros
-            .FirstOrDefaultAsync(l => 
-                (l.Titulo == dto.Titulo && l.Autor == dto.Autor) ||
-                (!string.IsNullOrWhiteSpace(dto.Isbn) && dto.Isbn != "Sem ISBN" && l.Isbn == dto.Isbn)
-            );
+                .FirstOrDefaultAsync(l =>
+                    (l.Titulo == dto.Titulo && l.Autor == dto.Autor) ||
+                    (!string.IsNullOrWhiteSpace(dto.Isbn) && dto.Isbn != "Sem ISBN" && l.Isbn == dto.Isbn)
+                );
 
         if (livroLocal == null)
         {
@@ -107,11 +106,19 @@ public class UsuarioController : ControllerBase
             {
                 Titulo = dto.Titulo,
                 Autor = string.IsNullOrWhiteSpace(dto.Autor) ? "Autor Desconhecido" : dto.Autor,
-                Isbn = string.IsNullOrWhiteSpace(dto.Isbn) ? "Sem ISBN" : dto.Isbn
+                Isbn = string.IsNullOrWhiteSpace(dto.Isbn) ? $"Sem ISBN - {Guid.NewGuid().ToString().Substring(0, 8)}" : dto.Isbn,
+                Temas = string.IsNullOrWhiteSpace(dto.Temas) ? "Sem Temas" : dto.Temas 
             };
 
             await _contexto.Livros.AddAsync(livroLocal);
+
             await _contexto.SaveChangesAsync();
+        }
+
+        else if (string.IsNullOrWhiteSpace(livroLocal.Temas) && !string.IsNullOrWhiteSpace(dto.Temas))
+        {
+            livroLocal.Temas = dto.Temas;
+            _contexto.Livros.Update(livroLocal);
         }
 
         var situacaoExistente = await _contexto.SituacaoLivros
@@ -133,6 +140,8 @@ public class UsuarioController : ControllerBase
                 DataAtualizacao = DateTime.Now
             };
             await _contexto.SituacaoLivros.AddAsync(novaSituacao);
+
+            await _contexto.SaveChangesAsync();
         }
 
         await _contexto.SaveChangesAsync();

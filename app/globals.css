@@ -11,6 +11,7 @@
   --cor-botao-primario: #2F855A; /* Verde médio */
   --cor-botao-texto: #FFFFFF;
   --cor-destaque: #D69E2E;       /* Dourado para detalhes */
+  --padrao-fundo: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%232F855A' fill-opacity='0.04' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 /* 2. TEMA LARANJA */
@@ -24,6 +25,7 @@
   --cor-botao-primario: #DD6B20; /* Laranja vibrante */
   --cor-botao-texto: #FFFFFF;
   --cor-destaque: #319795;       /* Verde água para contraste */
+  --padrao-fundo: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20.5V18H0v-2h20v-2H0v-2h20v-2H0V8h20V6H0V4h20V2H0V0h22v20h2v-20h2v20h2v-20h2v20h2v-20h2v20h2v-20h2v20h2v-20h2v20h2v-20h2v22H20v-1.5z' fill='%23DD6B20' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
 }
 
 /* 3. TEMA ESCURO */
@@ -37,10 +39,17 @@
   --cor-botao-primario: #805AD5; /* Roxo Letrify */
   --cor-botao-texto: #FFFFFF;
   --cor-destaque: #F6E05E;       /* Amarelo vivo */
+  --padrao-fundo:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
 }
 
 body {
   background-color: var(--cor-fundo-app);
+  background-image: var(--padrao-fundo);
   color: var(--cor-texto-principal);
   transition: all 0.3s ease;
+}
+
+.bg-card-limpo {
+  background-color: var(--cor-fundo-card);
+  background-image: none; /* Bloqueia o padrão de invadir o card */
 }

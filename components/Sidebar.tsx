@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 export default function Sidebar() {
   return (
-    <aside className="w-24 border-r border-gray-300 dark:border-gray-800 flex flex-col items-center py-8 h-screen justify-between" style={{ backgroundColor: 'var(--cor-fundo-sidebar)' }}>
+    <aside className="w-24 border-r border-gray-300 dark:border-gray-800 sticky top-0 self-start flex flex-col items-center py-8 min-h-screen justify-between" style={{ backgroundColor: 'var(--cor-fundo-sidebar)' }}>
       
       {/* TOPO: Logo que leva pro Feed */}
       <Link href="/login" className="font-bold text-lg text-center hover:scale-105 transition-transform" style={{ backgroundColor: 'var(--cor-fundo-sidebar)', color: 'var(--cor-texto-sidebar)' }}>

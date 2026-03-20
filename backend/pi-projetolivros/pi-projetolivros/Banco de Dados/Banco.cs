@@ -25,12 +25,10 @@ public partial class Banco : DbContext
     public virtual DbSet<Usuario> Usuarios { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseNpgsql("Name=ConnectionStrings:ConexaoSupabase");
+        => optionsBuilder.UseSqlServer("Name=ConnectionStrings:Azure");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.HasPostgresExtension("pg_stat_statements");
-
         modelBuilder.Entity<Livro>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("livros_pkey");
@@ -49,6 +47,7 @@ public partial class Banco : DbContext
             entity.Property(e => e.Titulo)
                 .HasMaxLength(255)
                 .HasColumnName("titulo");
+            entity.Property(e => e.Temas).HasColumnName("temas");
         });
 
         modelBuilder.Entity<SituacaoLivro>(entity =>

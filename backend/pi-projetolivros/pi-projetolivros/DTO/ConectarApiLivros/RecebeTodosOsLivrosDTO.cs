@@ -17,14 +17,17 @@ public class OpenLibraryPesquisaDoc
     public string Titulo { get; set; }
 
     [JsonPropertyName("author_name")]
-    public List<string> NomeAutor { get; set; } 
+    public List<string> NomeAutor { get; set; }
 
     [JsonPropertyName("first_publish_year")]
     public int? PrimeiroAnoPublicacao { get; set; }
 
     [JsonPropertyName("isbn")]
-    public List<string> Isbn { get; set; } 
+    public List<string> Isbn { get; set; }
 
     [JsonPropertyName("publisher")]
     public List<string> Editora { get; set; }
+
+    [JsonPropertyName("subject")]
+    public List<string> Temas { get; set; }
 }

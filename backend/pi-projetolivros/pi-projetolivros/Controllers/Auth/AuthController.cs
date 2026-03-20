@@ -1,5 +1,4 @@
-﻿using BCrypt.Net;
-using Microsoft.AspNetCore.Identity;
+﻿using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using pi_projetolivros.DTO.Auth;
@@ -29,21 +28,28 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Registro([FromBody] RegisterDto registroDto)
     {
         if (registroDto is null)
-            return BadRequest();
+            return BadRequest(new { erro = "Dados inválidos." });
+
+        var emailRegex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+        if (!emailRegex.IsMatch(registroDto.Email))
+            return BadRequest(new { erro = "E-mail em formato incorreto." });
+
+        var senhaRegex = new Regex(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$");
+        if (!senhaRegex.IsMatch(registroDto.Senha))
+            return BadRequest(new { erro = "A senha deve ter pelo menos 8 caracteres, contendo letras maiúsculas, minúsculas, números e caracteres especiais." });
 
         var emailUser = await _contexto.Usuarios.FirstOrDefaultAsync(u => u.Email == registroDto.Email);
 
         if (emailUser is not null)
-            return BadRequest("E-mail já cadastrado");
+            return BadRequest(new { erro = "E-mail já cadastrado no sistema." });
 
         var senhaCriptografada = BCrypt.Net.BCrypt.HashPassword(registroDto.Senha);
 
-        var novoUsuario = new Usuario 
-        { 
-            Nome = registroDto.Nome, 
-            Email = registroDto.Email, 
-            Senha = senhaCriptografada,
-            
+        var novoUsuario = new Usuario
+        {
+            Nome = registroDto.Nome,
+            Email = registroDto.Email,
+            Senha = senhaCriptografada
         };
 
         await _contexto.Usuarios.AddAsync(novoUsuario);

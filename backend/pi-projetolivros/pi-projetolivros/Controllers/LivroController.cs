@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using pi_projetolivros.DTO.ConectarApiLivros;
 using pi_projetolivros.Models;
@@ -31,7 +31,7 @@ public class LivroController : ControllerBase
         // exemplo: GET /api/livro/livrostema?tema=fantasy&quantidade=10
 
         string temaTratado = Uri.EscapeDataString(tema.Trim().ToLower());
-        string url = $"https://openlibrary.org/search.json?subject={temaTratado}&page={pagina}&limit={quantidade}&fields=title,author_name,first_publish_year,isbn,publisher";
+        string url = $"https://openlibrary.org/search.json?subject={temaTratado}&page={pagina}&limit={quantidade}&fields=title,author_name,first_publish_year,isbn,publisher,subject";
 
         var response = await _httpClient.GetAsync(url);
         if (!response.IsSuccessStatusCode)
@@ -63,7 +63,7 @@ public class LivroController : ControllerBase
 
         string tituloTratado = Uri.EscapeDataString(titulo.Trim().ToLower());
 
-        string url = $"https://openlibrary.org/search.json?title={tituloTratado}&page={pagina}&limit={quantidade}&fields=title,author_name,first_publish_year,isbn,publisher";
+        string url = $"https://openlibrary.org/search.json?title={tituloTratado}&page={pagina}&limit={quantidade}&fields=title,author_name,first_publish_year,isbn,publisher,subject";
 
         var response = await _httpClient.GetAsync(url);
         if (!response.IsSuccessStatusCode)
@@ -90,7 +90,7 @@ public class LivroController : ControllerBase
             return BadRequest("O nome do autor para pesquisa não pode estar vazio.");
 
         string autorTratado = Uri.EscapeDataString(autor.Trim().ToLower());
-        string url = $"https://openlibrary.org/search.json?author={autorTratado}&page={pagina}&limit={quantidade}&fields=title,author_name,first_publish_year,isbn,publisher";
+        string url = $"https://openlibrary.org/search.json?author={autorTratado}&page={pagina}&limit={quantidade}&fields=title,author_name,first_publish_year,isbn,publisher,subject";
 
         var response = await _httpClient.GetAsync(url);
         if (!response.IsSuccessStatusCode)
@@ -107,7 +107,7 @@ public class LivroController : ControllerBase
     }
 
 
-        
+
 
     // Métodos
     #region Region métodos
@@ -117,6 +117,19 @@ public class LivroController : ControllerBase
         foreach (var doc in docs)
         {
             string primeiroIsbn = doc.Isbn?.FirstOrDefault() ?? "Sem ISBN";
+
+            var temasDoLivro = doc.Temas ?? new List<string>();
+
+            if (!string.IsNullOrEmpty(temaPadrao) && !temasDoLivro.Contains(temaPadrao))
+            {
+                temasDoLivro.Add(temaPadrao);
+            }
+
+            if (!temasDoLivro.Any())
+            {
+                temasDoLivro.Add("Literatura Geral");
+            }
+
             var meuLivro = new LivroClasse
             {
                 Isbn = primeiroIsbn,
@@ -125,7 +138,7 @@ public class LivroController : ControllerBase
                 DataPublicacao = doc.PrimeiroAnoPublicacao?.ToString() ?? "Desconhecida",
                 Editora = doc.Editora?.FirstOrDefault() ?? "Editora Desconhecida",
                 Paginas = 0,
-                Temas = string.IsNullOrEmpty(temaPadrao) ? new List<string>() : new List<string> { temaPadrao }
+                Temas = temasDoLivro 
             };
             listaDeLivros.Add(meuLivro);
         }

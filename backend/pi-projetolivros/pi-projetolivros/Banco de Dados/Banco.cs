@@ -23,6 +23,8 @@ public partial class Banco : DbContext
     public virtual DbSet<SituacaoLivro> SituacaoLivros { get; set; }
 
     public virtual DbSet<Usuario> Usuarios { get; set; }
+    public virtual DbSet<Avaliaco> Avaliacoes { get; set; }
+    public virtual DbSet<Favorito> Favoritos { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer("Name=ConnectionStrings:Azure");
@@ -109,6 +111,64 @@ public partial class Banco : DbContext
             entity.Property(e => e.FotoPerfil)
                 .HasMaxLength(255)
                 .HasColumnName("foto_perfil");
+        });
+
+        modelBuilder.Entity<Avaliaco>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_avaliacoes"); // ou o nome da sua PK no banco
+
+            entity.ToTable("avaliacoes");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
+            entity.Property(e => e.LivroId).HasColumnName("livro_id");
+            entity.Property(e => e.Nota).HasColumnName("nota");
+            entity.Property(e => e.Resenha).HasColumnName("resenha");
+            entity.Property(e => e.DataAvaliacao)
+                .HasColumnType("datetime")
+                .HasColumnName("data_avaliacao");
+
+            // Relação com Livro
+            entity.HasOne(d => d.Livro)
+                .WithMany() // Se você criou a lista no Livro.cs, pode colocar p => p.Avaliacoes aqui
+                .HasForeignKey(d => d.LivroId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_Livro_Avaliacao");
+
+            // Relação com Usuario
+            entity.HasOne(d => d.Usuario)
+                .WithMany() // Se você criou a lista no Usuario.cs, pode colocar p => p.Avaliacoes aqui
+                .HasForeignKey(d => d.UsuarioId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_Usuario_Avaliacao");
+        });
+
+        modelBuilder.Entity<Favorito>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_favoritos");
+
+            entity.ToTable("favoritos");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
+            entity.Property(e => e.LivroId).HasColumnName("livro_id");
+            entity.Property(e => e.DataFavoritado)
+                .HasColumnType("datetime")
+                .HasColumnName("data_favoritado");
+
+            // Relação com Livro
+            entity.HasOne(d => d.Livro)
+                .WithMany()
+                .HasForeignKey(d => d.LivroId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_Fav_Livro");
+
+            // Relação com Usuario
+            entity.HasOne(d => d.Usuario)
+                .WithMany()
+                .HasForeignKey(d => d.UsuarioId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_Fav_Usuario");
         });
 
         OnModelCreatingPartial(modelBuilder);

@@ -7,7 +7,7 @@ using pi_projetolivros_banco;
 using System.Reflection.Metadata;
 using System.Security.Claims;
 
-namespace pi_projetolivros.Controllers;
+namespace pi_projetolivros.Controllers.Usuario;
 
 [ApiController]
 [Route("api/[controller]")]

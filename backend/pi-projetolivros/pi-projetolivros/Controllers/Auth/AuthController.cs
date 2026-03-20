@@ -7,7 +7,6 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using pi_projetolivros_banco;
-using pi_projetolivros.Models.Banco;
 
 namespace pi_projetolivros.Controllers.Auth;
 
@@ -45,7 +44,7 @@ public class AuthController : ControllerBase
 
         var senhaCriptografada = BCrypt.Net.BCrypt.HashPassword(registroDto.Senha);
 
-        var novoUsuario = new Usuario
+        var novoUsuario = new Models.Banco.Usuario
         {
             Nome = registroDto.Nome,
             Email = registroDto.Email,
@@ -82,7 +81,7 @@ public class AuthController : ControllerBase
         return Ok(new { token = tokenString }); 
     }
 
-    private string GenerateJwtToken(Usuario user)
+    private string GenerateJwtToken(Models.Banco.Usuario user)
     {
         var claims = new List<Claim>
     {

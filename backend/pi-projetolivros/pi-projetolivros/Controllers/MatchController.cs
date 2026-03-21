@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using pi_projetolivros.Models.Banco;
-using pi_projetolivros.Serviços;
+using pi_projetolivros.Servicos;
 using pi_projetolivros_banco;
 using System.Reflection.Metadata;
 using System.Security.Claims;
@@ -34,7 +34,7 @@ public class MatchController : ControllerBase
         .Include(l => l.Livro)
         .Where(u => u.UsuarioId == usuarioId && u.Livro != null)
         .Select(l => l.Livro)
-        .ToListAsync();
+        .ToListAsync(); 
 
         var rankTemas = livrosDoUsuario
             .Where(l => !string.IsNullOrEmpty(l.Temas))

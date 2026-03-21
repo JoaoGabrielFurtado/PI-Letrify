@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using pi_projetolivros.Serviços;
+using pi_projetolivros.Servicos;
 using pi_projetolivros_banco;
 using System.Text;
 

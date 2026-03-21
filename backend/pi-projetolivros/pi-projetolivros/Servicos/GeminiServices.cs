@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using System.Text.Json;
 
-namespace pi_projetolivros.Serviços;
+namespace pi_projetolivros.Servicos;
 
 public class GeminiServices
 {

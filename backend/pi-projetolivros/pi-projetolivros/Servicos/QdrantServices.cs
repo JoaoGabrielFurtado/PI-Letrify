@@ -2,7 +2,7 @@
 using Qdrant.Client;
 using Qdrant.Client.Grpc;
 
-namespace pi_projetolivros.Serviços;
+namespace pi_projetolivros.Servicos;
 public class QdrantServices
 {
     private readonly QdrantClient _clienteQdrant;  

@@ -201,6 +201,89 @@ public class UsuarioController : ControllerBase
         return Ok(new { message = "Livro removido da sua lista com sucesso!" });
     }
 
+
+    [HttpGet("informacoes")]
+    [Authorize]
+    public async Task<IActionResult> InformacoesUsuario()
+    {
+        var usuarioIdText = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(usuarioIdText, out int usuarioId))
+            return Unauthorized("Token inválido.");
+
+        var usuario = await _contexto.Usuarios.FirstOrDefaultAsync(u => u.Id == usuarioId);
+
+        if (usuario == null) return NotFound("Usuário não encontrado");
+
+        var livrosDoUsuario = await _contexto.SituacaoLivros
+        .Include(l => l.Livro)
+        .Where(u => u.UsuarioId == usuarioId && u.Livro != null)
+        .Select(l => l.Livro)
+        .ToListAsync();
+
+        var livroFavorito = await _contexto.Favoritos.Include(f => f.Livro).FirstOrDefaultAsync(l => l.UsuarioId == usuarioId);
+
+        var temasContagem = livrosDoUsuario
+            .Where(l => !string.IsNullOrEmpty(l.Temas)) 
+            .SelectMany(l => l.Temas.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim()))  
+            .Where(tema => tema != "Sem Temas") 
+            .GroupBy(palavra => palavra) 
+            .Select(grupo => new
+            {
+                Tema = grupo.Key,
+                Quantidade = grupo.Count()
+            })
+            .OrderByDescending(item => item.Quantidade)
+            .ToList();
+
+        var autoresContagem = livrosDoUsuario
+        .Where(l => !string.IsNullOrEmpty(l.Autor))
+        .SelectMany(l => l.Autor.Split(',', StringSplitOptions.RemoveEmptyEntries)).Select(t => t.Trim())
+        .GroupBy(palavra => palavra)
+        .OrderByDescending(grupo => grupo.Count())
+        .Select(grupo => new {
+            Autor = grupo.Key,
+            Quantidade = grupo.Count()
+        })
+        .Take(3)
+        .ToList();
+
+        var situacoesContadas = await _contexto.SituacaoLivros
+            .Where(u => u.UsuarioId == usuarioId && u.Livro != null)
+            .GroupBy(u => u.Status) 
+            .Select(g => new
+            {
+                Situacao = g.Key,
+                Quantidade = g.Count() 
+            })
+            .OrderByDescending(x => x.Quantidade)
+            .ToListAsync();
+
+        var totalLivros = livrosDoUsuario.Count();
+
+        return Ok(new
+        {
+            perfil = new
+            {
+                nome = usuario.Nome,
+                foto = usuario.FotoPerfil
+            },
+            estatisticas = new
+            {
+                totalDeLivros = totalLivros,
+                situacoes = situacoesContadas,
+                topTemas = temasContagem.Take(10), 
+                topAutores = autoresContagem
+            },
+            favorito = livroFavorito != null ? new
+            {
+                id = livroFavorito.Livro.Id,
+                titulo = livroFavorito.Livro.Titulo,
+                autor = livroFavorito.Livro.Autor,
+            } : null 
+        });
+
+    }
+
     [HttpDelete("deletar")]
     [Authorize]
     public async Task<IActionResult> DeletarUsuario()

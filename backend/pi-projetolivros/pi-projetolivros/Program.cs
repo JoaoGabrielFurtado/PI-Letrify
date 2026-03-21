@@ -26,7 +26,7 @@ builder.Services.AddCors(options =>
         builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 });
 
-var chaveSecreta = builder.Configuration["Jwt:Key"];
+var chaveSecreta = builder.Configuration["Jwt:Key"] ?? throw new Exception("A chave secreta do JWT não foi encontrada!");
 var chaveEmBytes = Encoding.UTF8.GetBytes(chaveSecreta);
  
 builder.Services.AddAuthentication(options =>

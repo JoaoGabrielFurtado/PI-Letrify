@@ -5,20 +5,13 @@ import { useRouter } from "next/navigation";
 
 const AUTH_KEY = "letrify-auth";
 
-<<<<<<< HEAD
 // O "Segurança" do Feed agora está atualizado!
-=======
-// O "Segurança" do Feed
->>>>>>> front
 function hasValidSession() {
   if (typeof window === "undefined") return false;
   const raw = localStorage.getItem(AUTH_KEY);
   if (!raw) return false;
   try {
-<<<<<<< HEAD
     // Agora ele procura pelo "token" que a API enviou!
-=======
->>>>>>> front
     const parsed = JSON.parse(raw) as { token: string; expiresAt: number };
     return Boolean(parsed.token && typeof parsed.expiresAt === "number" && Date.now() < parsed.expiresAt);
   } catch {
@@ -34,11 +27,7 @@ export default function Home() {
     if (!hasValidSession()) {
       router.replace("/login");
     } else {
-<<<<<<< HEAD
       // Só libera a tela se o token estiver lá certinho
-=======
-      // Só libera a tela se o token estiver
->>>>>>> front
       setAutorizado(true);
     }
   }, [router]);

@@ -42,11 +42,7 @@ export default function EditarPerfilPage() {
   const [modalAberto, setModalAberto] = useState(false);
   const [tokenSessao, setTokenSessao] = useState("");
 
-<<<<<<< HEAD
   // 1. Busca os dados reais ao entrar
-=======
-  // Busca os dados reais ao entrar
->>>>>>> front
   useEffect(() => {
     const rawAuth = localStorage.getItem("letrify-auth");
     if (!rawAuth) {
@@ -93,28 +89,16 @@ export default function EditarPerfilPage() {
         setFotoPerfilUrl(imageUrl);
         setFotoArquivo(file); // Guarda o arquivo para o FormData
       } else {
-<<<<<<< HEAD
         setBannerUrl(imageUrl); // Banner é só mock por enquanto
-=======
-        setBannerUrl(imageUrl); 
->>>>>>> front
       }
     }
   };
 
-<<<<<<< HEAD
   // 2. Salva as alterações reais na API!
   const handleSalvarPerfil = async () => {
     setSalvando(true);
     try {
       // Como a API pede FormData (por causa da imagem), criamos um:
-=======
-  // Salva as alterações reais na API!
-  const handleSalvarPerfil = async () => {
-    setSalvando(true);
-    try {
-      // Como a API pede FormData (por causa da imagem), cria um
->>>>>>> front
       const formData = new FormData();
       formData.append("cidade", cidade);
       formData.append("idade", idade.toString());
@@ -134,11 +118,7 @@ export default function EditarPerfilPage() {
 
       if (resposta.ok) {
         alert("Perfil atualizado com sucesso!");
-<<<<<<< HEAD
         router.push("/perfil"); // Volta pro perfil normal para ver o resultado
-=======
-        router.push("/perfil"); 
->>>>>>> front
       } else {
         alert("Erro ao salvar as informações na API.");
       }
@@ -176,11 +156,7 @@ export default function EditarPerfilPage() {
         </div>
       </div>
 
-<<<<<<< HEAD
       {/* 1. O CABEÇALHO EDITÁVEL */}
-=======
-      {/* O CABEÇALHO EDITÁVEL */}
->>>>>>> front
       <div className="rounded-xl shadow-md border mb-6 overflow-hidden relative" style={{ backgroundColor: 'var(--cor-fundo-card)', borderColor: 'var(--cor-fundo-sidebar)' }}>
         
         {/* Banner Editável */}
@@ -252,11 +228,7 @@ export default function EditarPerfilPage() {
         </div>
       </div>
 
-<<<<<<< HEAD
       {/* 2. O GERENCIADOR DE DESTAQUES (Vitrines) */}
-=======
-      {/* O GERENCIADOR DE DESTAQUES (Vitrines) */}
->>>>>>> front
       <h2 className="text-xl font-bold mb-4 mt-10" style={{ color: 'var(--cor-texto-principal)' }}>Minhas Vitrines (Destaques)</h2>
       
       <div className="grid grid-cols-1 gap-6">
@@ -275,11 +247,7 @@ export default function EditarPerfilPage() {
         </button>
       </div>
 
-<<<<<<< HEAD
       {/* 3. O MODAL DE ESCOLHA (Pop-up) */}
-=======
-      {/* O MODAL DE ESCOLHA (Pop-up) */}
->>>>>>> front
       {modalAberto && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div 

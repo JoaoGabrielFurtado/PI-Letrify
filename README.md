@@ -47,7 +47,6 @@ npm run lint      # ESLint
 npm run typecheck # checagem TypeScript
 ```
 
-<<<<<<< HEAD
 ## 🔧 Configuração de ambiente
 
 Crie `.env.local` na raiz (não versionar) com variáveis:
@@ -67,8 +66,6 @@ Use em código com `process.env.NEXT_PUBLIC_API_URL`.
 
 ## 📦 Tecnologias
 
-=======
->>>>>>> front
 ## 📦 Tecnologias
 
 | Tipo | Ferramenta / Tecnologia |
@@ -78,11 +75,7 @@ Use em código com `process.env.NEXT_PUBLIC_API_URL`.
 | **UI** | React |
 | **Estilos** | CSS / Tailwind |
 | **Fontes** | next/font |
-<<<<<<< HEAD
 | **Deploy** | Vercel (recomendado) |
-=======
-| **Deploy** | Vercel |
->>>>>>> front
 
 ## 📘 Referências
 

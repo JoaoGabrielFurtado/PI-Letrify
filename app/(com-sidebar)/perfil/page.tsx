@@ -20,11 +20,7 @@ const fetcherUsuarioDaApi = async (url: string) => {
   }
 };
 
-<<<<<<< HEAD
 // 2. Criamos um componente interno com toda a sua lógica atual
-=======
-// Criamos um componente interno com toda a lógica
->>>>>>> front
 function ConteudoDoPerfil() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -121,11 +117,7 @@ function ConteudoDoPerfil() {
   );
 }
 
-<<<<<<< HEAD
 // 3. A exportação principal agora "embrulha" o conteúdo no Suspense
-=======
-// A exportação principal agora "embrulha" o conteúdo no Suspense
->>>>>>> front
 export default function PerfilPage() {
   return (
     <Suspense fallback={<div className="max-w-7xl mx-auto w-full pt-4"><SkeletonCabecalho /></div>}>

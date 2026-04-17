@@ -10,11 +10,7 @@ export default function MatchPage() {
   const [erro, setErro] = useState<string | null>(null);
   const [buscou, setBuscou] = useState(false);
 
-<<<<<<< HEAD
   // 1. RECUPERAR DO CACHE AO ABRIR
-=======
-  // RECUPERAR DO CACHE AO ABRIR
->>>>>>> front
   useEffect(() => {
     const cache = sessionStorage.getItem("letrify-last-matches");
     if (cache) {
@@ -54,11 +50,7 @@ export default function MatchPage() {
 
         setMatches(leitoresMapeados);
         
-<<<<<<< HEAD
         // 2. SALVAR NO CACHE DE SESSÃO
-=======
-        // SALVAR NO CACHE DE SESSÃO
->>>>>>> front
         sessionStorage.setItem("letrify-last-matches", JSON.stringify(leitoresMapeados));
 
       } else {

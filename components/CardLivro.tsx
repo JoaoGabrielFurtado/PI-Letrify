@@ -9,31 +9,20 @@ export interface LivroDados {
   autor?: string;
   autores?: string[];
   autorPrincipal?: string;
-<<<<<<< HEAD
   status?: string; // Se vier da estante, já sabemos o status atual
-=======
-  status?: string;
->>>>>>> front
 }
 
 interface CardLivroProps {
   livro: LivroDados;
   // Nova organização de variantes:
-<<<<<<< HEAD
   // "busca" -> Os 3 botões empilhados (Pedido do Prof)
-=======
-  // "busca" -> Os 3 botões empilhados
->>>>>>> front
   // "estante" -> Os 3 emojis na horizontal para trocar de status
   variante?: "busca" | "estante" | "simples"; // "simples" é só um botão grande para as vitrines
 }
 
 export default function CardLivro({ livro, variante = "busca" }: CardLivroProps) {
   const [carregandoStatus, setCarregandoStatus] = useState<string | null>(null);
-<<<<<<< HEAD
   // Agora o feedback sabe qual botão mostrar a mensagem!
-=======
->>>>>>> front
   const [sucessoNoBotao, setSucessoNoBotao] = useState<string | null>(null);
 
   const tituloFinal = livro.titulo || "Título Desconhecido";
@@ -63,11 +52,7 @@ export default function CardLivro({ livro, variante = "busca" }: CardLivroProps)
       });
 
       if (resposta.ok || resposta.status === 200) {
-<<<<<<< HEAD
         // Se deu certo, mostra "Salvo!" só no botão que o cara clicou
-=======
-        // Se deu certo, mostra "Salvo!" só no botão que o usuario clicou
->>>>>>> front
         setSucessoNoBotao(statusEscolhido);
       } else {
         const erroMsg = await resposta.text();

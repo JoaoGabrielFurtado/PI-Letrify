@@ -2,11 +2,7 @@
 
 import { useState, useEffect } from "react";
 
-<<<<<<< HEAD
 // O nosso "banco de dados" de paletas
-=======
-// O "banco de dados" de paletas
->>>>>>> front
 const paletasDeCores = [
   { 
     id: 0, 
@@ -33,11 +29,7 @@ export default function PersonalizacaoPage() {
   const [temaAtivo, setTemaAtivo] = useState(0);
   const [salvando, setSalvando] = useState(false);
 
-<<<<<<< HEAD
   // Lê o cache ao abrir a tela para marcar a bolinha certa
-=======
-  // Lê o cache ao abrir a tela para marcar a bolinha
->>>>>>> front
   useEffect(() => {
     const temaSalvo = localStorage.getItem("letrify_theme");
     if (temaSalvo) {
@@ -54,17 +46,10 @@ export default function PersonalizacaoPage() {
   const handleMudarTema = (id: number) => {
     setTemaAtivo(id);
     
-<<<<<<< HEAD
     // 1. Define se é modo escuro baseado no ID (O ID 2 é o nosso tema noturno)
     const isEscuro = id === 2;
 
     // 2. Atualiza visualmente na hora (injetando no HTML)
-=======
-    // Define se é modo escuro baseado no ID 
-    const isEscuro = id === 2;
-
-    // Atualiza visualmente na hora (injetando no HTML)
->>>>>>> front
     document.documentElement.setAttribute("data-theme-palette", String(id));
     if (isEscuro) {
       document.documentElement.classList.add("dark");
@@ -72,11 +57,7 @@ export default function PersonalizacaoPage() {
       document.documentElement.classList.remove("dark");
     }
     
-<<<<<<< HEAD
     // 3. Salva no cache do navegador (Para o ThemeManager ler depois)
-=======
-    // Salva no cache do navegador (Para o ThemeManager ler depois)
->>>>>>> front
     localStorage.setItem("letrify_theme", JSON.stringify({
       paleta: id,
       escura: isEscuro
@@ -126,13 +107,9 @@ export default function PersonalizacaoPage() {
                       isAtivo ? 'scale-110 ring-4 ring-offset-4' : 'hover:scale-105 hover:shadow-xl'
                     }`}
                     style={{ 
-<<<<<<< HEAD
                       // O anel puxa a cor primária da paleta
                       '--tw-ring-color': paleta.corPrimaria,
                       // O offset puxa a cor de fundo do App para o contraste perfeito
-=======
-                      '--tw-ring-color': paleta.corPrimaria,
->>>>>>> front
                       '--tw-ring-offset-color': 'var(--cor-fundo-app)',
                     } as React.CSSProperties}
                     aria-label={`Selecionar tema ${paleta.nome}`}

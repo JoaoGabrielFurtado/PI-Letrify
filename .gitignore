@@ -1,0 +1,32 @@
+# ==========================================
+# .gitignore para .NET / Visual Studio 2022
+# ==========================================
+
+# Pastas de compilação (Arquivos pesados e gerados automaticamente)
+[Bb]in/
+[Oo]bj/
+out/
+
+# Arquivos de configuração local do Visual Studio (Evita conflitos com outros devs)
+.vs/
+*.user
+*.suo
+*.userosprefs
+*.sln.docstates
+
+# Arquivos de log
+*.log
+
+# Arquivos de publicação (Publish)
+*.Publish.xml
+*.pubxml
+*.pubxml.user
+publish/
+
+# Arquivos do macOS / Windows (Lixo do sistema operacional)
+.DS_Store
+Thumbs.db
+
+
+appsettings.Development.json
+appsettings.json

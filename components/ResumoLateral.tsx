@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 interface ResumoLateralProps {
   estante: { lidos: number; lendo: number; queroLer: number } | null;
@@ -16,24 +17,24 @@ export default function ResumoLateral({ estante, totalGrupos, totalGuias }: Resu
           className="p-5 rounded-2xl border transition-colors hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer"
           style={{ backgroundColor: 'var(--cor-fundo-card)', borderColor: 'var(--cor-fundo-sidebar)' }}
         >
-          <div className="flex items-center justify-between mb-3">
+          <Link href="/estante" className="flex items-center justify-between mb-3 hover:opacity-70 transition-opacity">
             <h3 className="font-bold text-sm uppercase tracking-wider" style={{ color: 'var(--cor-primaria)' }}>Estante</h3>
             <span className="text-lg opacity-50">📚</span>
-          </div>
+          </Link>
           
           <div className="flex flex-col gap-2 text-sm font-semibold">
-            <div className="flex justify-between items-center">
+            <Link href="/estante?filtro=Lendo" className="flex justify-between items-center hover:translate-x-1 transition-transform">
               <span style={{ color: 'var(--cor-texto-secundario)' }}>Lendo</span>
               <span style={{ color: 'var(--cor-texto-principal)' }}>{estante.lendo}</span>
-            </div>
-            <div className="flex justify-between items-center">
+            </Link>
+            <Link href="/estante?filtro=Lido" className="flex justify-between items-center hover:translate-x-1 transition-transform">
               <span style={{ color: 'var(--cor-texto-secundario)' }}>Lidos</span>
               <span style={{ color: 'var(--cor-texto-principal)' }}>{estante.lidos}</span>
-            </div>
-            <div className="flex justify-between items-center">
+            </Link>
+            <Link href="/estante?filtro=Quero Ler" className="flex justify-between items-center hover:translate-x-1 transition-transform">
               <span style={{ color: 'var(--cor-texto-secundario)' }}>Quero Ler</span>
               <span style={{ color: 'var(--cor-texto-principal)' }}>{estante.queroLer}</span>
-            </div>
+            </Link>
           </div>
         </div>
       )}

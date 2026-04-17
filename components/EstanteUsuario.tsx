@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { authService } from "@/app/lib/authService";
 import CardLivro, { LivroDados } from "@/components/CardLivro";
 
@@ -12,10 +13,22 @@ interface RespostaEstante {
 }
 
 export default function EstanteUsuario() {
+  const searchParams = useSearchParams();
   const [estante, setEstante] = useState<RespostaEstante>({ lendo: [], lido: [], queroLer: [] });
   const [filtroAtivo, setFiltroAtivo] = useState<"Todos" | "Lendo" | "Lido" | "Quero Ler">("Todos");
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
+
+  // Monitora a URL para aplicar o filtro vindo do ResumoLateral
+  useEffect(() => {
+    const filtroDaUrl = searchParams.get("filtro");
+    
+    if (filtroDaUrl === "Lendo") setFiltroAtivo("Lendo");
+    else if (filtroDaUrl === "Lido") setFiltroAtivo("Lido");
+    else if (filtroDaUrl === "Quero Ler") setFiltroAtivo("Quero Ler");
+    else setFiltroAtivo("Todos");
+
+  }, [searchParams])
 
   useEffect(() => {
     const buscarEstante = async () => {

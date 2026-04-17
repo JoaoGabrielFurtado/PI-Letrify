@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using pi_projetolivros.Models;
 using pi_projetolivros.Models.Banco;
-using pi_projetolivros.Servicos;
+using pi_projetolivros.Serviços;
 using pi_projetolivros_banco;
 
 namespace pi_projetolivros.Controllers.PopularBanco;
@@ -106,7 +106,7 @@ public class SeedController : ControllerBase
 
         await _qdrantService.InicializarColecaoAsync();
 
-        var fakerUsuarios = new Faker<Usuario>("pt_BR")
+        var fakerUsuarios = new Faker<Models.Banco.Usuario>("pt_BR")
             .RuleFor(u => u.Nome, f => f.Name.FullName())
             .RuleFor(u => u.Email, (f, u) => f.Internet.Email(u.Nome).ToLower())
             .RuleFor(u => u.Senha, f => "123456"); 

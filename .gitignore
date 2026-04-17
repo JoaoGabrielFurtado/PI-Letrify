@@ -27,9 +27,6 @@ publish/
 .DS_Store
 Thumbs.db
 
-# ==========================================
-# SEGURANÇA (Opcional, mas recomendado)
-# ==========================================
-# Descomente a linha abaixo se você colocar senhas de banco de dados 
-# no seu arquivo de desenvolvimento no futuro:
-# appsettings.Development.json
+
+appsettings.Development.json
+appsettings.json

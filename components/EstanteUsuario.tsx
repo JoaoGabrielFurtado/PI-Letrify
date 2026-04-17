@@ -1,10 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-<<<<<<< HEAD
-=======
 import { useSearchParams } from "next/navigation";
->>>>>>> front
 import { authService } from "@/app/lib/authService";
 import CardLivro, { LivroDados } from "@/components/CardLivro";
 
@@ -16,17 +13,12 @@ interface RespostaEstante {
 }
 
 export default function EstanteUsuario() {
-<<<<<<< HEAD
-=======
   const searchParams = useSearchParams();
->>>>>>> front
   const [estante, setEstante] = useState<RespostaEstante>({ lendo: [], lido: [], queroLer: [] });
   const [filtroAtivo, setFiltroAtivo] = useState<"Todos" | "Lendo" | "Lido" | "Quero Ler">("Todos");
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
 
-<<<<<<< HEAD
-=======
   // Monitora a URL para aplicar o filtro vindo do ResumoLateral
   useEffect(() => {
     const filtroDaUrl = searchParams.get("filtro");
@@ -38,7 +30,6 @@ export default function EstanteUsuario() {
 
   }, [searchParams])
 
->>>>>>> front
   useEffect(() => {
     const buscarEstante = async () => {
       setCarregando(true);
@@ -64,11 +55,7 @@ export default function EstanteUsuario() {
 
         const dados = await resposta.json();
         
-<<<<<<< HEAD
         // Garante que se a API mandar null em alguma categoria, a gente transforma em array vazio
-=======
-        // Garante que se a API mandar null em alguma categoria, transforma em array vazio
->>>>>>> front
         setEstante({
           lendo: dados.lendo || [],
           lido: dados.lido || [],
@@ -85,11 +72,7 @@ export default function EstanteUsuario() {
     buscarEstante();
   }, []);
 
-<<<<<<< HEAD
   // Lógica de Filtro: Decide qual array vamos mostrar na tela
-=======
-  // Lógica de Filtro: Decide qual array mostrar na tela
->>>>>>> front
   let livrosParaMostrar: LivroDados[] = [];
   
   if (filtroAtivo === "Todos") {
@@ -102,21 +85,13 @@ export default function EstanteUsuario() {
     livrosParaMostrar = estante.queroLer;
   }
 
-<<<<<<< HEAD
   // Abas do nosso menu
-=======
-  // Abas do menu
->>>>>>> front
   const abas = ["Todos", "Lendo", "Lido", "Quero Ler"];
 
   return (
     <div className="w-full animate-fade-in">
       
-<<<<<<< HEAD
       {/* 1. O MENU DE FILTROS */}
-=======
-      {/* O MENU DE FILTROS */}
->>>>>>> front
       <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mb-8 border-b pb-4" style={{ borderColor: 'var(--cor-fundo-sidebar)' }}>
         {abas.map((aba) => {
           const isAtivo = filtroAtivo === aba;
@@ -142,11 +117,7 @@ export default function EstanteUsuario() {
         })}
       </div>
 
-<<<<<<< HEAD
       {/* 2. FEEDBACKS VISUAIS */}
-=======
-      {/* FEEDBACKS VISUAIS */}
->>>>>>> front
       {carregando && (
         <div className="py-20 text-center opacity-50 font-bold animate-pulse" style={{ color: 'var(--cor-primaria)' }}>
           <span className="text-4xl block mb-4">📚</span>
@@ -172,19 +143,12 @@ export default function EstanteUsuario() {
         </div>
       )}
 
-<<<<<<< HEAD
       {/* 3. A GRADE DE LIVROS */}
-=======
-      {/* A GRADE DE LIVROS */}
->>>>>>> front
       {!carregando && !erro && livrosParaMostrar.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {livrosParaMostrar.map((livro, index) => (
            <div key={`${livro.isbn || 'livro'}-${index}`} className="h-full">
-<<<<<<< HEAD
               {/* Reciclando o nosso Lego na versão simples (sem abrir o leque de botões) */}
-=======
->>>>>>> front
               <CardLivro livro={livro} variante="estante" />
             </div>
           ))}

@@ -29,11 +29,7 @@ export function SkeletonCabecalho() {
               <div className="h-10 w-32 bg-black/10 dark:bg-white/10 rounded-xl"></div>
             </div>
 
-<<<<<<< HEAD
-            {/* Bio e Conexões (Na mesma linha!) */}
-=======
             {/* Bio e Conexões*/}
->>>>>>> front
             <div className="mt-4 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
               {/* Bio Skeleton (3 linhas falsas) */}
               <div className="space-y-2 w-full max-w-xl">
@@ -54,11 +50,7 @@ export function SkeletonCabecalho() {
 }
 
 // ----------------------------------------------------------------------
-<<<<<<< HEAD
 // 2. O COMPONENTE REAL (Totalmente "burro", só renderiza o que recebe)
-=======
-// O COMPONENTE REAL (só renderiza o que recebe)
->>>>>>> front
 // ----------------------------------------------------------------------
 
 // Definindo o "contrato" do que este componente precisa para funcionar

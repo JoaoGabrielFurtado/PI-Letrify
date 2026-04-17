@@ -47,25 +47,6 @@ npm run lint      # ESLint
 npm run typecheck # checagem TypeScript
 ```
 
-## 🔧 Configuração de ambiente
-
-Crie `.env.local` na raiz (não versionar) com variáveis:
-
-```env
-NEXT_PUBLIC_API_URL=https://api.exemplo.com
-```
-
-Use em código com `process.env.NEXT_PUBLIC_API_URL`.
-
-## 📌 O que editar para desenvolver
-
-- Alterar página principal: `app/page.tsx`
-- Adicionar componente: `app/components/*`
-- Criar rota API: `app/api/*`
-- Metadata global: layout.tsx / `app/head.tsx`
-
-## 📦 Tecnologias
-
 ## 📦 Tecnologias
 
 | Tipo | Ferramenta / Tecnologia |
@@ -75,7 +56,7 @@ Use em código com `process.env.NEXT_PUBLIC_API_URL`.
 | **UI** | React |
 | **Estilos** | CSS / Tailwind |
 | **Fontes** | next/font |
-| **Deploy** | Vercel (recomendado) |
+| **Deploy** | Vercel |
 
 ## 📘 Referências
 

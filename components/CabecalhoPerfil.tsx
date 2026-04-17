@@ -1,4 +1,7 @@
 "use client";
+import { useState } from "react";
+import EditorPerfil from "./EditorPerfil"; // Importe o novo componente
+import { authService } from "@/app/lib/authService";
 
 // ----------------------------------------------------------------------
 // 1. O SKELETON DO CABEÇALHO (A sombra exata do componente real)
@@ -65,17 +68,69 @@ interface CabecalhoProps {
 }
 
 export default function CabecalhoPerfil({
-  nome, 
-  cidade, 
-  descricao, 
-  fotoPerfil, 
-  bannerUrl, 
-  estatisticas = { seguindo: 0, seguidores: 0 }, 
+  nome: initialNome, 
+  cidade: initialCidade, 
+  descricao: initialDescricao, 
+  fotoPerfil: initialFoto, 
+  bannerUrl: initialBanner, 
+  estatisticas, 
   isDonoDoPerfil 
 }: CabecalhoProps) {
   
-  // A inicial do nome caso o usuário não tenha foto
-  const inicial = nome ? nome.charAt(0).toUpperCase() : "U";
+  const [dadosPerfil, setDadosPerfil] = useState({
+    nome: initialNome,
+    cidade: initialCidade,
+    descricao: initialDescricao,
+    fotoPerfil: initialFoto,
+    bannerUrl: initialBanner
+  });
+
+  const [isEditorAberto, setIsEditorAberto] = useState(false);
+
+  const handleSalvarDados = async (novosDados: any) => {
+    try {
+      const token = authService.getToken();
+      if (!token) throw new Error("Você precisa estar logado para editar o perfil.");
+    
+      const formData = new FormData();
+      
+      // Mapeando os campos que a sua API espera
+      if (novosDados.nome) formData.append("nome", novosDados.nome);
+      if (novosDados.cidade) formData.append("cidade", novosDados.cidade);
+      if (novosDados.descricao) formData.append("descricao", novosDados.descricao);
+
+      if (novosDados.fotoPerfil instanceof File) {
+        formData.append("foto", novosDados.fotoPerfil);
+      }
+
+      const resposta = await fetch("https://letrify.fly.dev/api/usuario/editar", {
+        method: "PUT",
+        headers: {
+          // Nota: NÃO definimos Content-Type aqui. 
+          // O navegador define automaticamente como multipart/form-data quando usamos FormData.
+          "Authorization": `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      if (resposta.ok || resposta.status === 200) {
+        // Atualiza o estado visual no cabeçalho
+        setDadosPerfil(novosDados);
+        setIsEditorAberto(false);
+        alert("Perfil atualizado com sucesso! ✨");
+      } else {
+        const erroMsg = await resposta.text();
+        throw new Error(erroMsg || "Erro ao atualizar perfil.");
+      }
+
+    } catch (err: any) {
+      console.error("Erro ao salvar:", err);
+      alert(err.message);
+    }
+  };
+  
+    // A inicial do nome caso o usuário não tenha foto
+  const inicial = dadosPerfil.nome ? dadosPerfil.nome.charAt(0).toUpperCase() : "U";
 
   return (
     <div className="animate-fade-in relative mb-8">
@@ -83,7 +138,7 @@ export default function CabecalhoPerfil({
       {/* BANNER */}
       <div 
         className="h-56 w-full rounded-t-2xl bg-cover bg-center relative"
-        style={{ backgroundImage: `url("${bannerUrl}")` }}
+        style={{ backgroundImage: `url("${dadosPerfil.bannerUrl}")` }}
       >
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-t-2xl"></div>
       </div>
@@ -99,19 +154,19 @@ export default function CabecalhoPerfil({
           <div className="flex flex-col items-center md:items-start shrink-0 -mt-16 z-10">
             <div 
               className="w-36 h-36 flex items-center justify-center text-5xl font-bold shadow-xl border-4 object-cover overflow-hidden"
-              style={{ backgroundColor: 'var(--cor-primaria)', color: 'var(--cor-botao-texto)', borderColor: 'var(--cor-fundo-card)', borderRadius: '2rem' }}
+              style={{ backgroundColor: 'var(--cor-fundo-app)', color: 'var(--cor-botao-texto)', borderColor: 'var(--cor-fundo-card)', borderRadius: '2rem' }}
             >
-              {fotoPerfil ? (
-                <img src={fotoPerfil} alt={`Avatar de ${nome}`} className="w-full h-full object-cover" />
+              {dadosPerfil.fotoPerfil ? (
+                <img src={dadosPerfil.fotoPerfil} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
                 inicial
               )}
             </div>
             
             {/* Localização condicional (só renderiza se a API trouxer a cidade) */}
-            {cidade && (
+            {dadosPerfil.cidade && (
               <div className="mt-3 flex items-center gap-1 font-semibold text-sm" style={{ color: 'var(--cor-texto-secundario)' }}>
-                📍 {cidade}
+                📍 {dadosPerfil.cidade}
               </div>
             )}
           </div>
@@ -122,12 +177,13 @@ export default function CabecalhoPerfil({
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               {/*Nome do Perfil*/}
               <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--cor-texto-principal)' }}>
-                {nome}
+                {dadosPerfil.nome}
               </h1>
               
               {isDonoDoPerfil ? (
                 <button 
-                  className="px-5 py-2 text-sm font-bold rounded-xl shadow transition-transform hover:scale-105"
+                  onClick={() => setIsEditorAberto(true)}
+                  className="px-5 py-2 text-sm font-bold rounded-xl shadow transition-transform hover:scale-105 active:scale-95"
                   style={{ backgroundColor: 'var(--cor-fundo-app)', color: 'var(--cor-texto-principal)', border: '2px solid var(--cor-destaque)' }}
                 >
                   Editar Perfil
@@ -147,7 +203,7 @@ export default function CabecalhoPerfil({
               
               {/* Bio */}
               <div className="text-sm leading-relaxed max-w-2xl flex-1" style={{ color: 'var(--cor-texto-principal)' }}>
-                {descricao ? descricao : <span className="italic opacity-60">Este usuário ainda não escreveu uma biografia.</span>}
+                {dadosPerfil.descricao || <span className="italic opacity-60">Este usuário ainda não escreveu uma biografia.</span>}
               </div>
 
               {/* Conexões*/}
@@ -166,6 +222,15 @@ export default function CabecalhoPerfil({
 
         </div>
       </div>
+
+   {/* MODAL DE EDIÇÃO - Fora da estrutura de colunas para evitar conflitos de z-index */}
+      {isEditorAberto && (
+        <EditorPerfil 
+          dadosIniciais={dadosPerfil} // Passa o estado ATUAL
+          onClose={() => setIsEditorAberto(false)} 
+          onSave={handleSalvarDados}
+        />
+      )}
     </div>
   );
 }

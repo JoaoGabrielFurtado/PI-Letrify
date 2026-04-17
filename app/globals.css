@@ -61,12 +61,20 @@ body {
   height: 6px; /* Espessura da rolagem horizontal (Carrossel) */
 }
 
+<<<<<<< HEAD
 /* 2. O Trilho (Track) fica 100% invisível, como você pediu */
+=======
+/* O Trilho (Track) fica 100% invisível */
+>>>>>>> front
 ::-webkit-scrollbar-track {
   background: transparent; 
 }
 
+<<<<<<< HEAD
 /* 3. A Barrinha (Thumb) puxa a cor primária do tema atual! */
+=======
+/* A Barrinha (Thumb) puxa a cor primária do tema atual! */
+>>>>>>> front
 ::-webkit-scrollbar-thumb {
   background-color: var(--cor-primaria); 
   border-radius: 10px; /* Deixa as pontas arredondadas */
@@ -78,7 +86,11 @@ body {
   background-color: var(--cor-destaque); 
 }
 
+<<<<<<< HEAD
 /* 4. Suporte para o Firefox (que não usa o -webkit) */
+=======
+/* Suporte para o Firefox (que não usa o -webkit) */
+>>>>>>> front
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--cor-primaria) transparent;

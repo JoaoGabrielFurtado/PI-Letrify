@@ -4,7 +4,11 @@ export default function Sidebar() {
   return (
     <aside className="w-24 border-r border-gray-300 dark:border-gray-800 sticky top-0 self-start flex flex-col items-center py-8 min-h-screen justify-between" style={{ backgroundColor: 'var(--cor-fundo-sidebar)' }}>
       
+<<<<<<< HEAD
       {/* TOPO: Logo que leva pro Feed */}
+=======
+      {/* TOPO: Logo */}
+>>>>>>> front
       <Link href="/login" className="font-bold text-lg text-center hover:scale-105 transition-transform" style={{ backgroundColor: 'var(--cor-fundo-sidebar)', color: 'var(--cor-texto-sidebar)' }}>
         Letrify
       </Link>
@@ -31,7 +35,11 @@ export default function Sidebar() {
         </Link>
       </nav>
 
+<<<<<<< HEAD
       {/* FINAL: Configurações (Aponta direto pra Conta, que é a tela inicial!) */}
+=======
+      {/* FINAL: Configurações */}
+>>>>>>> front
       <Link href="/conta" title="Configurações" className="text-2xl hover:rotate-90 transition-transform duration-300">
         ⚙️
       </Link>

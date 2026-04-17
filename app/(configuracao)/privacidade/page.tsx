@@ -24,7 +24,11 @@ export default function PrivacidadePage() {
   const [quemPodeMensagem, setQuemPodeMensagem] = useState("todos");
   const [quemPodeGrupo, setQuemPodeGrupo] = useState("seguidores");
 
+<<<<<<< HEAD
   // Carrega do Banco Falso (localStorage) ao abrir
+=======
+  // Carrega do localStorage ao abrir
+>>>>>>> front
   useEffect(() => {
     const dadosSalvos = localStorage.getItem("letrify-privacidade");
     if (dadosSalvos) {
@@ -40,7 +44,11 @@ export default function PrivacidadePage() {
     setCarregando(false);
   }, []);
 
+<<<<<<< HEAD
   // Salva no Banco Falso (localStorage) a cada clique
+=======
+  // Salva no localStorage a cada clique
+>>>>>>> front
   const salvarPreferencia = (chave: string, valor: any) => {
     const novasPreferencias = {
       contaPrivada, ocultarBuscas, mostrarEstante, mostrarResenhas, 
@@ -92,7 +100,11 @@ export default function PrivacidadePage() {
         />
       </section>
 
+<<<<<<< HEAD
       {/* BLOCO 2: O QUE MOSTRAR NO PERFIL (A MÁGICA DO CADEADO ESTÁ AQUI) */}
+=======
+      {/* BLOCO 2: O QUE MOSTRAR NO PERFIL */}
+>>>>>>> front
       {/* O relative aqui é crucial para o cadeado se basear NESTA seção inteira! */}
       <section className="space-y-4">
         
@@ -105,9 +117,15 @@ export default function PrivacidadePage() {
             <div 
              className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl backdrop-blur-[2px] mt-0 border-2 border-dashed gap-3 p-10" 
              style={{ 
+<<<<<<< HEAD
                 backgroundColor: 'rgba(var(--cor-fundo-app-rgb), 0.7)', // Fundo translúcido do próprio tema
                borderColor: 'var(--cor-texto-secundario)',
                cursor: 'not-allowed' // Sinal de proibido no cadeado inteiro!
+=======
+                backgroundColor: 'rgba(var(--cor-fundo-app-rgb), 0.7)', 
+               borderColor: 'var(--cor-texto-secundario)',
+               cursor: 'not-allowed' 
+>>>>>>> front
               }}
             >
               <span className="text-4xl">🔒</span>
@@ -118,7 +136,11 @@ export default function PrivacidadePage() {
             </div>
           )}
 
+<<<<<<< HEAD
           {/* Os Legos agora com as descrições de volta */}
+=======
+          {/* Os componentes agora com as descrições de volta */}
+>>>>>>> front
          <Interruptor 
             titulo="Mostrar Estante de Livros"
             descricao="Permite que qualquer pessoa veja os livros que leu ou quer ler."

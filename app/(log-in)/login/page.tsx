@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+<<<<<<< HEAD
 import { authService } from "@/app/lib/authService"; // Importe o serviço que acabamos de criar
+=======
+import { authService } from "@/app/lib/authService"; 
+>>>>>>> front
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,7 +27,11 @@ export default function LoginPage() {
     e.preventDefault(); // Impede a página de recarregar
     setErro("");
 
+<<<<<<< HEAD
     // 1. VALIDAÇÃO BÁSICA DO FRONT
+=======
+    // VALIDAÇÃO BÁSICA DO FRONT
+>>>>>>> front
     if (!email || !senha) {
       setErro("Por favor, preencha todos os campos.");
       return;
@@ -33,12 +41,19 @@ export default function LoginPage() {
       return;
     }
 
+<<<<<<< HEAD
     // 2. COMUNICAÇÃO COM A API REAL
     setCarregando(true);
     try {
       await authService.login(email, senha);
       
       // Deu sucesso? Manda para o Perfil (ou Feed)!
+=======
+    // COMUNICAÇÃO COM A API
+    setCarregando(true);
+    try {
+      await authService.login(email, senha);
+>>>>>>> front
       router.push("/perfil");
       
     } catch (err: any) {

@@ -9,15 +9,25 @@ export default function ContaPage() {
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
 
+<<<<<<< HEAD
   // 1. FUNÇÃO DE SAIR (LOGOUT)
+=======
+  // FUNÇÃO DE SAIR (LOGOUT)
+>>>>>>> front
   const handleLogout = () => {
     authService.logout(); // Limpa o token do localStorage
     router.push("/login"); // Manda pro olho da rua (com carinho)
   };
 
+<<<<<<< HEAD
   // 2. FUNÇÃO DE EXCLUIR CONTA (Conectada à API Real!)
   const handleExcluirConta = async () => {
     // Aquele alert nativo do navegador para evitar acidentes
+=======
+  // FUNÇÃO DE EXCLUIR CONTA (Conectada à API Real!)
+  const handleExcluirConta = async () => {
+    // alert nativo do navegador para evitar acidentes
+>>>>>>> front
     const confirmar = window.confirm("Tem certeza absoluta? Esta ação apagará permanentemente a sua estante, resenhas e foto de perfil.");
     if (!confirmar) return;
 
@@ -39,9 +49,15 @@ export default function ContaPage() {
         throw new Error("Não foi possível excluir a conta. Tente novamente.");
       }
 
+<<<<<<< HEAD
       // Se a API excluiu com sucesso, a gente desloga o cara e manda pra tela inicial
       authService.logout();
       router.push("/cadastro"); // Pode ser pra home ou pro cadastro
+=======
+      // Se a API excluiu com sucesso, a gente desloga o usuário e manda pra tela inicial
+      authService.logout();
+      router.push("/cadastro"); 
+>>>>>>> front
 
     } catch (err: any) {
       setErro(err.message);
@@ -78,7 +94,11 @@ export default function ContaPage() {
         </div>
       </section>
 
+<<<<<<< HEAD
       {/* BLOCO 2: SESSÃO (O FAMOSO BOTÃO DE SAIR) */}
+=======
+      {/* BLOCO 2: SESSÃO (BOTÃO DE SAIR) */}
+>>>>>>> front
       <section className="space-y-4">
         <h2 className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--cor-primaria)' }}>Sessão</h2>
         

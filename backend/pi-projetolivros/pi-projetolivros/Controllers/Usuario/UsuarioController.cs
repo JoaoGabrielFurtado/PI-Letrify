@@ -43,8 +43,6 @@ public class UsuarioController : ControllerBase
         return Ok(perfilPublico);
     }
 
-
-    // Usuario editar o proprio perfil
     [HttpPut("editar")]
     [Authorize] 
     public async Task<IActionResult> EditarUsuario([FromForm] EditarPerfilDto dto)
@@ -202,63 +200,80 @@ public class UsuarioController : ControllerBase
     }
 
 
-    [HttpGet("informacoes")]
+    [HttpGet("informacoes/{id?}")]
     [Authorize]
-    public async Task<IActionResult> InformacoesUsuario()
+    public async Task<IActionResult> InformacoesUsuario(int? id)
     {
-        var usuarioIdText = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (!int.TryParse(usuarioIdText, out int usuarioId))
-            return Unauthorized("Token inválido.");
+        int targetUserId;
+        if (id.HasValue && id.Value > 0)
+        {
+            targetUserId = id.Value; 
+        }
+        else
+        {
+            var usuarioIdText = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(usuarioIdText, out targetUserId))
+                return Unauthorized(new { mensagem = "Token inválido." }); 
+        }
 
-        var usuario = await _contexto.Usuarios.FirstOrDefaultAsync(u => u.Id == usuarioId);
+        var usuario = await _contexto.Usuarios
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == targetUserId);
 
-        if (usuario == null) return NotFound("Usuário não encontrado");
+        if (usuario == null)
+            return NotFound(new { mensagem = "Usuário não encontrado." });
 
         var livrosDoUsuario = await _contexto.SituacaoLivros
-        .Include(l => l.Livro)
-        .Where(u => u.UsuarioId == usuarioId && u.Livro != null)
-        .Select(l => l.Livro)
-        .ToListAsync();
+            .AsNoTracking()
+            .Include(l => l.Livro)
+            .Where(u => u.UsuarioId == targetUserId && u.Livro != null)
+            .Select(l => l.Livro)
+            .ToListAsync();
 
-        var livroFavorito = await _contexto.Favoritos.Include(f => f.Livro).FirstOrDefaultAsync(l => l.UsuarioId == usuarioId);
+        var livroFavorito = await _contexto.Favoritos
+            .AsNoTracking()
+            .Include(f => f.Livro)
+            .FirstOrDefaultAsync(l => l.UsuarioId == targetUserId);
 
         var temasContagem = livrosDoUsuario
-            .Where(l => !string.IsNullOrEmpty(l.Temas)) 
-            .SelectMany(l => l.Temas.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim()))  
-            .Where(tema => tema != "Sem Temas") 
-            .GroupBy(palavra => palavra) 
+            .Where(l => !string.IsNullOrEmpty(l.Temas))
+            .SelectMany(l => l.Temas.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim()))
+            .Where(tema => tema != "Sem Temas")
+            .GroupBy(palavra => palavra)
             .Select(grupo => new
             {
                 Tema = grupo.Key,
                 Quantidade = grupo.Count()
             })
             .OrderByDescending(item => item.Quantidade)
+            .Take(10) 
             .ToList();
 
         var autoresContagem = livrosDoUsuario
-        .Where(l => !string.IsNullOrEmpty(l.Autor))
-        .SelectMany(l => l.Autor.Split(',', StringSplitOptions.RemoveEmptyEntries)).Select(t => t.Trim())
-        .GroupBy(palavra => palavra)
-        .OrderByDescending(grupo => grupo.Count())
-        .Select(grupo => new {
-            Autor = grupo.Key,
-            Quantidade = grupo.Count()
-        })
-        .Take(3)
-        .ToList();
+            .Where(l => !string.IsNullOrEmpty(l.Autor))
+            .SelectMany(l => l.Autor.Split(',', StringSplitOptions.RemoveEmptyEntries)).Select(t => t.Trim())
+            .GroupBy(palavra => palavra)
+            .OrderByDescending(grupo => grupo.Count())
+            .Select(grupo => new {
+                Autor = grupo.Key,
+                Quantidade = grupo.Count()
+            })
+            .Take(3)
+            .ToList();
 
         var situacoesContadas = await _contexto.SituacaoLivros
-            .Where(u => u.UsuarioId == usuarioId && u.Livro != null)
-            .GroupBy(u => u.Status) 
+            .AsNoTracking()
+            .Where(u => u.UsuarioId == targetUserId && u.Livro != null)
+            .GroupBy(u => u.Status)
             .Select(g => new
             {
                 Situacao = g.Key,
-                Quantidade = g.Count() 
+                Quantidade = g.Count()
             })
             .OrderByDescending(x => x.Quantidade)
             .ToListAsync();
 
-        var totalLivros = livrosDoUsuario.Count();
+        var totalLivros = livrosDoUsuario.Count;
 
         return Ok(new
         {
@@ -271,7 +286,7 @@ public class UsuarioController : ControllerBase
             {
                 totalDeLivros = totalLivros,
                 situacoes = situacoesContadas,
-                topTemas = temasContagem.Take(10), 
+                topTemas = temasContagem,
                 topAutores = autoresContagem
             },
             favorito = livroFavorito != null ? new
@@ -279,9 +294,8 @@ public class UsuarioController : ControllerBase
                 id = livroFavorito.Livro.Id,
                 titulo = livroFavorito.Livro.Titulo,
                 autor = livroFavorito.Livro.Autor,
-            } : null 
+            } : null
         });
-
     }
 
     [HttpDelete("deletar")]

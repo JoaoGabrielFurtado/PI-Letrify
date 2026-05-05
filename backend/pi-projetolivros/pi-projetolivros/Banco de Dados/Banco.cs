@@ -1,8 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using pi_projetolivros.DTO.Usuario;
 using pi_projetolivros.Models;
 using pi_projetolivros.Models.Banco;
+using pi_projetolivros.Models.Chat;
+using System;
+using System.Collections.Generic;
 
 namespace pi_projetolivros_banco;
 
@@ -19,12 +21,12 @@ public partial class Banco : DbContext
     }
 
     public virtual DbSet<Livro> Livros { get; set; }
-
     public virtual DbSet<SituacaoLivro> SituacaoLivros { get; set; }
-
     public virtual DbSet<Usuario> Usuarios { get; set; }
     public virtual DbSet<Avaliaco> Avaliacoes { get; set; }
     public virtual DbSet<Favorito> Favoritos { get; set; }
+    public virtual DbSet<Seguidor> Seguidores { get; set; }
+    public DbSet<MensagemChat> MensagensChat { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer("Name=ConnectionStrings:Azure");
@@ -169,6 +171,40 @@ public partial class Banco : DbContext
                 .HasForeignKey(d => d.UsuarioId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_Fav_Usuario");
+        });
+
+        modelBuilder.Entity<Seguidor>(entity =>
+        {
+            entity.HasKey(s => s.Id);
+
+            entity.HasOne(s => s.SeguidorUsuario)
+                  .WithMany()
+                  .HasForeignKey(s => s.SeguidorId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(s => s.SeguidoUsuario)
+                  .WithMany()
+                  .HasForeignKey(s => s.SeguidoId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<MensagemChat>(entity =>
+        {
+            entity.HasKey(m => m.Id);
+
+            entity.Property(m => m.Conteudo)
+                  .IsRequired()
+                  .HasMaxLength(150);
+
+            entity.HasOne(m => m.Usuario)
+                  .WithMany()
+                  .HasForeignKey(m => m.UsuarioId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(m => m.MensagemPai)
+                  .WithMany(m => m.Respostas)
+                  .HasForeignKey(m => m.MensagemPaiId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
 
         OnModelCreatingPartial(modelBuilder);

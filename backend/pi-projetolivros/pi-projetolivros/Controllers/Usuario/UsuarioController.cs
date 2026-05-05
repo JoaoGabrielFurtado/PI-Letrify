@@ -273,6 +273,14 @@ public class UsuarioController : ControllerBase
             .OrderByDescending(x => x.Quantidade)
             .ToListAsync();
 
+        var totalSeguidores = await _contexto.Seguidores
+            .AsNoTracking()
+            .CountAsync(s => s.SeguidoId == targetUserId);
+
+        var totalSeguindo = await _contexto.Seguidores
+            .AsNoTracking()
+            .CountAsync(s => s.SeguidorId == targetUserId);
+
         var totalLivros = livrosDoUsuario.Count;
 
         return Ok(new
@@ -280,7 +288,9 @@ public class UsuarioController : ControllerBase
             perfil = new
             {
                 nome = usuario.Nome,
-                foto = usuario.FotoPerfil
+                foto = usuario.FotoPerfil,
+                seguidores = totalSeguidores,
+                seguindo = totalSeguindo
             },
             estatisticas = new
             {

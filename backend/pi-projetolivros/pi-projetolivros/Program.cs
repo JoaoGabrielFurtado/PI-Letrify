@@ -99,7 +99,7 @@ app.UseStaticFiles();
 
 app.UseCors("PermitirTudo");
 
-app.UseAuthentication(); 
+app.UseAuthentication();
 app.UseRateLimiter();    
 app.UseAuthorization();
 

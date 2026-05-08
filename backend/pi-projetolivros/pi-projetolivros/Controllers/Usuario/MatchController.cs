@@ -30,23 +30,23 @@ public class MatchController : ControllerBase
     {
         try
         {
-            var usuarioId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+        var usuarioId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
 
             // ── 1. Lógica de embedding (sem alteração) ──────────────────────────
-            var livrosDoUsuario = await _contexto.SituacaoLivros
-                .Include(l => l.Livro)
-                .Where(u => u.UsuarioId == usuarioId && u.Livro != null)
-                .Select(l => l.Livro)
-                .ToListAsync();
+        var livrosDoUsuario = await _contexto.SituacaoLivros
+        .Include(l => l.Livro)
+        .Where(u => u.UsuarioId == usuarioId && u.Livro != null)
+        .Select(l => l.Livro)
+        .ToListAsync();
 
-            var rankTemas = livrosDoUsuario
-                .Where(l => !string.IsNullOrEmpty(l.Temas))
-                .SelectMany(l => l.Temas.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim()))
+        var rankTemas = livrosDoUsuario
+            .Where(l => !string.IsNullOrEmpty(l.Temas))
+            .SelectMany(l => l.Temas.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim()))
                 .GroupBy(p => p).OrderByDescending(g => g.Count())
                 .Select(g => g.Key).Take(5).ToList();
 
-            var rankAutores = livrosDoUsuario
-                .Where(l => !string.IsNullOrEmpty(l.Autor))
+        var rankAutores = livrosDoUsuario
+            .Where(l => !string.IsNullOrEmpty(l.Autor))
                 .SelectMany(l => l.Autor.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim()))
                 .GroupBy(p => p).OrderByDescending(g => g.Count())
                 .Select(g => g.Key).Take(5).ToList();
@@ -58,8 +58,8 @@ public class MatchController : ControllerBase
                 .Select(sl => sl.Livro.Titulo)
                 .Take(3).ToListAsync();
 
-            var temasLimpos = rankTemas.Where(t => t != "Sem Temas");
-            var autoresLimpos = rankAutores.Where(a => a != "Autor Desconhecido");
+        var temasLimpos = rankTemas.Where(t => t != "Sem Temas");
+        var autoresLimpos = rankAutores.Where(a => a != "Autor Desconhecido");
 
             var perfilSemantic = "Perfil de leitor.";
             if (temasLimpos.Any()) perfilSemantic += $" Gosta de temas como {string.Join(", ", temasLimpos)}.";
@@ -67,13 +67,16 @@ public class MatchController : ControllerBase
             if (ultimosLivrosLidos.Any()) perfilSemantic += $" Recentemente leu as obras {string.Join(", ", ultimosLivrosLidos)}.";
 
             var vetorDeCaracteristicas = await _geminiService.ObterEmbeddingAsync(perfilSemantic.Trim());
-            await _qdrantService.InicializarColecaoAsync();
-            await _qdrantService.SalvarVetorUsuarioAsync(usuarioId, vetorDeCaracteristicas);
+        await _qdrantService.InicializarColecaoAsync();
+
+        await _qdrantService.SalvarVetorUsuarioAsync(usuarioId, vetorDeCaracteristicas);
 
             var matches = await _qdrantService.BuscarUsuariosParecidosAsync(usuarioId, vetorDeCaracteristicas, limite: 20);
 
-            if (!matches.Any())
-                return Ok(new { mensagem = "Nenhum match encontrado ainda.", usuariosParecidos = new List<object>() });
+        if (!matches.Any())
+        {
+            return Ok(new { mensagem = "Nenhum match encontrado ainda.", usuariosParecidos = new List<object>() });
+        }
 
             var idsDosMatches = matches
                 .Where(m => m.Id != usuarioId)
@@ -81,8 +84,8 @@ public class MatchController : ControllerBase
                 .Take(18)
                 .ToList();
 
-            var usuariosDoBanco = await _contexto.Usuarios
-                .Where(u => idsDosMatches.Contains(u.Id))
+        var usuariosDoBanco = await _contexto.Usuarios
+            .Where(u => idsDosMatches.Contains(u.Id))
                 .Select(u => new { u.Id, u.Nome, u.Cidade, u.FotoPerfil })
                 .ToListAsync();
 
@@ -96,7 +99,7 @@ public class MatchController : ControllerBase
                 .Where(m => m.Id != usuarioId)
                 .Take(18)
                 .Select(matchQdrant =>
-                {
+            {
                     var usuario = usuariosDoBanco.FirstOrDefault(u => u.Id == matchQdrant.Id);
                     if (usuario == null) return null;
 
@@ -145,23 +148,23 @@ public class MatchController : ControllerBase
                             usuario.FotoPerfil,
                         },
                         PerfilLiterario = new
-                        {
+        {
                             LivrosMaisLidos = livrosMaisLidos,
                             AutoresPreferidos = autoresPreferidos,
                             TemasPreferidos = temasPreferidos,
                             TotalLivros = situacoesDoUsuario.Count
                         }
                     };
-                })
+        })
                 .Where(x => x != null)
-                .ToList();
+        .ToList();
 
-            return Ok(new
-            {
-                mensagem = "Matchmaking concluído com sucesso!",
-                usuariosParecidos = resultadoFinal
-            });
-        }
+        return Ok(new
+        {
+            mensagem = "Matchmaking concluído com sucesso!",
+            usuariosParecidos = resultadoFinal
+        });
+    }
         catch (Exception ex)
         {
             return StatusCode(500, new { mensagem = "Erro ao processar o Match.", erro = ex.Message });

@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 using pi_projetolivros.DTO.Usuario;
 using pi_projetolivros.Models;
 using pi_projetolivros.Models.Banco;
@@ -21,7 +23,9 @@ public partial class Banco : DbContext
     }
 
     public virtual DbSet<Livro> Livros { get; set; }
+
     public virtual DbSet<SituacaoLivro> SituacaoLivros { get; set; }
+
     public virtual DbSet<Usuario> Usuarios { get; set; }
     public virtual DbSet<Avaliaco> Avaliacoes { get; set; }
     public virtual DbSet<Favorito> Favoritos { get; set; }

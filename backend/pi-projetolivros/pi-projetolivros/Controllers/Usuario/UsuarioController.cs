@@ -43,6 +43,8 @@ public class UsuarioController : ControllerBase
         return Ok(perfilPublico);
     }
 
+
+    // Usuario editar o proprio perfil
     [HttpPut("editar")]
     [Authorize] 
     public async Task<IActionResult> EditarUsuario([FromForm] EditarPerfilDto dto)
@@ -211,7 +213,7 @@ public class UsuarioController : ControllerBase
         }
         else
         {
-            var usuarioIdText = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var usuarioIdText = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!int.TryParse(usuarioIdText, out targetUserId))
                 return Unauthorized(new { mensagem = "Token inválido." }); 
         }
@@ -225,10 +227,10 @@ public class UsuarioController : ControllerBase
 
         var livrosDoUsuario = await _contexto.SituacaoLivros
             .AsNoTracking()
-            .Include(l => l.Livro)
+        .Include(l => l.Livro)
             .Where(u => u.UsuarioId == targetUserId && u.Livro != null)
-            .Select(l => l.Livro)
-            .ToListAsync();
+        .Select(l => l.Livro)
+        .ToListAsync();
 
         var livroFavorito = await _contexto.Favoritos
             .AsNoTracking()
@@ -236,10 +238,10 @@ public class UsuarioController : ControllerBase
             .FirstOrDefaultAsync(l => l.UsuarioId == targetUserId);
 
         var temasContagem = livrosDoUsuario
-            .Where(l => !string.IsNullOrEmpty(l.Temas))
-            .SelectMany(l => l.Temas.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim()))
-            .Where(tema => tema != "Sem Temas")
-            .GroupBy(palavra => palavra)
+            .Where(l => !string.IsNullOrEmpty(l.Temas)) 
+            .SelectMany(l => l.Temas.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim()))  
+            .Where(tema => tema != "Sem Temas") 
+            .GroupBy(palavra => palavra) 
             .Select(grupo => new
             {
                 Tema = grupo.Key,
@@ -250,25 +252,25 @@ public class UsuarioController : ControllerBase
             .ToList();
 
         var autoresContagem = livrosDoUsuario
-            .Where(l => !string.IsNullOrEmpty(l.Autor))
-            .SelectMany(l => l.Autor.Split(',', StringSplitOptions.RemoveEmptyEntries)).Select(t => t.Trim())
-            .GroupBy(palavra => palavra)
-            .OrderByDescending(grupo => grupo.Count())
-            .Select(grupo => new {
-                Autor = grupo.Key,
-                Quantidade = grupo.Count()
-            })
-            .Take(3)
-            .ToList();
+        .Where(l => !string.IsNullOrEmpty(l.Autor))
+        .SelectMany(l => l.Autor.Split(',', StringSplitOptions.RemoveEmptyEntries)).Select(t => t.Trim())
+        .GroupBy(palavra => palavra)
+        .OrderByDescending(grupo => grupo.Count())
+        .Select(grupo => new {
+            Autor = grupo.Key,
+            Quantidade = grupo.Count()
+        })
+        .Take(3)
+        .ToList();
 
         var situacoesContadas = await _contexto.SituacaoLivros
             .AsNoTracking()
             .Where(u => u.UsuarioId == targetUserId && u.Livro != null)
-            .GroupBy(u => u.Status)
+            .GroupBy(u => u.Status) 
             .Select(g => new
             {
                 Situacao = g.Key,
-                Quantidade = g.Count()
+                Quantidade = g.Count() 
             })
             .OrderByDescending(x => x.Quantidade)
             .ToListAsync();
@@ -304,8 +306,9 @@ public class UsuarioController : ControllerBase
                 id = livroFavorito.Livro.Id,
                 titulo = livroFavorito.Livro.Titulo,
                 autor = livroFavorito.Livro.Autor,
-            } : null
+            } : null 
         });
+
     }
 
     [HttpDelete("deletar")]

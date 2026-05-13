@@ -1,43 +1,69 @@
-// app/lib/usuarioService.ts
-
-// O nosso "Plano B" para quando a API não mandar o banner
 const BANNER_PADRAO = "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=2070&auto=format&fit=crop";
 
-/**
- * MAPEADOR DA API: 
- * Recebe o JSON cru da API e garante que o Front-end não quebre se faltar algo.
- */
 export function mapearPerfilDaApi(dadosApi: any) {
-  
-  // Se a API falhar miseravelmente e devolver null/undefined, a gente devolve um esqueleto zerado
-  if (!dadosApi) return null;
+  // 🕵️ ESPIÃO 1: O que chegou na porta do Mapeador?
+  console.log("🕵️ MAPEADOR - O que recebi da API:", dadosApi);
 
-  return {
-    id: dadosApi.id || 0,
-    nome: dadosApi.nome || "Usuário Desconhecido",
-    fotoPerfil: dadosApi.fotoPerfil || "",
-    cidade: dadosApi.cidade || "",
+  if (!dadosApi) {
+    console.log("🕵️ MAPEADOR - dadosApi veio vazio! Abortando.");
+    return null;
+  }
+
+  const { perfil, estatisticas, favorito } = dadosApi;
+
+  // Função auxiliar para procurar dentro do Array de situações
+  const extrairQuantidade = (lista: any[], nomeSituacao: string) => {
+    if (!Array.isArray(lista)) return 0;
+    const item = lista.find((s) => s.situacao === nomeSituacao);
+    return item ? item.quantidade : 0;
+  };
+
+  const perfilMapeado = {
+    // 1. Dados Básicos do Perfil
+    nome: perfil?.nome || "Usuário",
+    fotoPerfil: perfil?.foto || "",
+    bannerUrl: BANNER_PADRAO, 
+    cidade: dadosApi.cidade || "", 
     descricao: dadosApi.descricao || "",
-    bannerUrl: dadosApi.bannerUrl || BANNER_PADRAO,
-    
-    // ESTATÍSTICAS: O Back-end que calcule. Se não vier, é 0.
+
+    // 2. Estatísticas do Cabeçalho
     estatisticas: {
-      seguindo: dadosApi.estatisticas?.seguindo || 0,
-      seguidores: dadosApi.estatisticas?.seguidores || 0,
+      seguidores: perfil?.seguidores || 0,
+      seguindo: perfil?.seguindo || 0,
     },
-    
-    // ESTANTE: O Back-end tem que mandar o resumo numérico.
+
+    // 3. Convertendo o Array da API para o formato que a Lateral espera
     estanteResumo: {
-      lidos: dadosApi.estanteResumo?.lidos || 0,
-      lendo: dadosApi.estanteResumo?.lendo || 0,
-      queroLer: dadosApi.estanteResumo?.queroLer || 0,
+      lidos: extrairQuantidade(estatisticas?.situacoes, 'Lido'),
+      lendo: extrairQuantidade(estatisticas?.situacoes, 'Lendo'),
+      queroLer: extrairQuantidade(estatisticas?.situacoes, 'Quero Ler'),
     },
-    
-    // GRUPOS E GUIAS: O Back-end que conte.
+
+    // 4. Convertendo 'autor' e 'quantidade' para 'nome' e 'valor' (Para a aba de Vitrines)
+    topAutores: Array.isArray(estatisticas?.topAutores) 
+      ? estatisticas.topAutores.map((a: any) => ({ nome: a.autor, valor: a.quantidade }))
+      : [],
+
+    // 5. Convertendo 'tema' e 'quantidade' para 'nome' e 'valor' (Para a aba de Vitrines)
+    topTemas: Array.isArray(estatisticas?.topTemas)
+      ? estatisticas.topTemas.map((t: any) => ({ nome: t.tema, valor: t.quantidade }))
+      : [],
+
+    // 6. Livro Favorito
+    favorito: favorito ? {
+      titulo: favorito.titulo,
+      autor: favorito.autor
+    } : null,
+
+    // Variáveis que não vi na imagem, mantendo defaults seguros
+    totalDeLivros: estatisticas?.totalDeLivros || 0,
     grupos: dadosApi.grupos || 0,
     guias: dadosApi.guias || 0,
-
-    // PRIVACIDADE: É o Back-end que sabe se a conta é privada. O front só obedece a flag.
     isPrivado: dadosApi.isPrivado || false
   };
+
+  // 🕵️ ESPIÃO 2: Como o dado ficou depois de traduzido?
+  console.log("🕵️ MAPEADOR - O que vou entregar para a Tela:", perfilMapeado);
+
+  return perfilMapeado;
 }

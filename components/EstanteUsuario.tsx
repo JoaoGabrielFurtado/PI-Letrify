@@ -12,7 +12,11 @@ interface RespostaEstante {
   queroLer: LivroDados[];
 }
 
-export default function EstanteUsuario() {
+interface EstanteUsuarioProps {
+  userId?: string;
+}
+
+export default function EstanteUsuario({ userId }: EstanteUsuarioProps) {
   const searchParams = useSearchParams();
   const [estante, setEstante] = useState<RespostaEstante>({ lendo: [], lido: [], queroLer: [] });
   const [filtroAtivo, setFiltroAtivo] = useState<"Todos" | "Lendo" | "Lido" | "Quero Ler">("Todos");
@@ -37,20 +41,27 @@ export default function EstanteUsuario() {
 
       try {
         const token = authService.getToken();
-        const userId = authService.getUserId();
+        const idFinal = userId || authService.getUserId();
 
-        if (!token || !userId) {
+        if (!idFinal) {
+          console.error("Nenhum ID de usuário encontrado para buscar a estante.");
+          return;
+        }
+
+        if (!token && !userId) {
           throw new Error("Você precisa estar logado para ver sua estante.");
         }
 
-        const resposta = await fetch(`https://letrify.fly.dev/api/usuario/${userId}/livros`, {
+        const resposta = await fetch(`https://letrify.fly.dev/api/usuario/${idFinal}/livros`, {
           headers: {
-            "Authorization": `Bearer ${token}`
+            "Authorization": token? `Bearer ${token}` : ""
           }
         });
 
         if (!resposta.ok) {
-          throw new Error("Não foi possível carregar os livros da sua estante.");
+          // Se a API retornar 403 ou 401, é porque o perfil é privado
+          if (resposta.status === 403) throw new Error("Esta estante é privada.");
+          throw new Error("Erro ao carregar estante");
         }
 
         const dados = await resposta.json();
@@ -70,7 +81,7 @@ export default function EstanteUsuario() {
     };
 
     buscarEstante();
-  }, []);
+  }, [userId]); // Re-executa sempre que o ID do perfil mudar
 
   // Lógica de Filtro: Decide qual array vamos mostrar na tela
   let livrosParaMostrar: LivroDados[] = [];

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import useSWR from "swr";
@@ -9,14 +9,12 @@ import useSWR from "swr";
 import CabecalhoPerfil, { SkeletonCabecalho } from "@/components/CabecalhoPerfil";
 import ResumoLateral from "@/components/ResumoLateral";
 import VitrineDestaques from "@/components/VitrineDestaques";
+import ModalConexoes from "@/components/ModalConexoes"; // Novo componente importado
 
 // Libs e Services
 import { mapearPerfilDaApi } from "@/app/lib/usuarioService";
 import { authService } from "@/app/lib/authService";
 
-// ----------------------------------------------------------------------
-// 1. FETCHER UNIFICADO (Com Suporte a Token e Logs de Debug)
-// ----------------------------------------------------------------------
 const fetcherUsuarioDaApi = async (url: string) => {
   try {
     const token = authService.getToken(); 
@@ -35,14 +33,11 @@ const fetcherUsuarioDaApi = async (url: string) => {
     
     return await resposta.json();
   } catch (erro) {
-    console.warn("Aviso do Front: Falha ao buscar dados do usuário.", erro);
+    console.warn("Aviso do Front: Falha ao buscar dados.", erro);
     return null;
   }
 };
 
-// ----------------------------------------------------------------------
-// 2. CONTEÚDO PRINCIPAL
-// ----------------------------------------------------------------------
 function ConteudoDoPerfil() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -52,9 +47,13 @@ function ConteudoDoPerfil() {
 
   const [meuId, setMeuId] = useState<string | null>(null);
   const [carregandoId, setCarregandoId] = useState(true);
-  
-  // Estado das Abas (do arquivo 2)
   const [abaAtiva, setAbaAtiva] = useState<"livro" | "autores" | "temas">("livro");
+
+  // Estado simplificado apenas para controlar a abertura do modal externo
+  const [modalConexao, setModalConexao] = useState<{ aberto: boolean; tipo: "seguidores" | "seguindo" }>({ 
+    aberto: false, 
+    tipo: "seguidores" 
+  });
 
   useEffect(() => {
     const idNoCofre = authService.getUserId();
@@ -69,23 +68,39 @@ function ConteudoDoPerfil() {
   const idParaBuscar = idDaUrl || meuId;
   const isDonoDoPerfil = (idParaBuscar === meuId) && !isPreview;
 
-  // SWR para gerenciamento de cache e estado
-  const { data: usuarioApi, error, isLoading, mutate } = useSWR(
+  // 1. SWR para informações básicas e estatísticas do perfil
+  const { data: usuarioApi, error, isLoading, mutate: mutatePerfil } = useSWR(
     idParaBuscar ? `/api/usuario/informacoes/${idParaBuscar}` : null, 
     fetcherUsuarioDaApi
   );
 
-  // Lógica de Seguir
+  // 2. SWR para pegar os seguidores do perfil e descobrir se o usuário logado está lá dentro
+  const { data: seguidoresLista, mutate: mutateSeguidores } = useSWR(
+    idParaBuscar ? `/api/seguidores/seguidores/${idParaBuscar}` : null,
+    fetcherUsuarioDaApi
+  );
+
+  // Descobre se o usuário logado está na lista de seguidores do perfil atual
+  const jaEstouSeguindo = useMemo(() => {
+    if (!meuId || !Array.isArray(seguidoresLista)) return false;
+    return seguidoresLista.some((s: any) => s.id === meuId);
+  }, [seguidoresLista, meuId]);
+
+  // Executa o Toggle de seguir/deixar de seguir baseado na documentação da API
   const handleFollowToggle = async () => {
     try {
       const token = authService.getToken();
-      await fetch(`https://letrify.fly.dev/api/usuario/seguir/${idParaBuscar}`, { 
+      const resposta = await fetch(`https://letrify.fly.dev/api/seguidores/seguir/${idParaBuscar}`, { 
         method: 'POST',
         headers: { "Authorization": `Bearer ${token}` }
       });
-      mutate(); // Recarrega os dados (número de seguidores)
+      if (resposta.ok) {
+        // Revalida os caches locais para atualizar o contador e o estado do botão na hora
+        mutatePerfil();
+        mutateSeguidores();
+      }
     } catch (err) {
-      console.error("Erro ao seguir", err);
+      console.error("Erro ao executar toggle de follow", err);
     }
   };
 
@@ -99,7 +114,6 @@ function ConteudoDoPerfil() {
   const perfilMapeado = mapearPerfilDaApi(usuarioApi);
   if (!perfilMapeado) return <div className="p-8 text-center">Perfil não encontrado.</div>;
 
-  // Injeção de privacidade local (Arquivo 1)
   if (isDonoDoPerfil) {
     const dadosSalvos = typeof window !== "undefined" ? localStorage.getItem("letrify-privacidade") : null;
     if (dadosSalvos) {
@@ -111,7 +125,6 @@ function ConteudoDoPerfil() {
   return (
     <div className="max-w-7xl mx-auto w-full pt-4 pb-20 relative px-4">
       
-      {/* AVISO MODO VISITANTE */}
       {isPreview && (
         <div className="mb-6 flex justify-end">
           <div className="flex items-center gap-4 bg-red-500 text-white px-5 py-2 rounded-full shadow-lg">
@@ -133,9 +146,10 @@ function ConteudoDoPerfil() {
         estatisticas={perfilMapeado.estatisticas}
         isDonoDoPerfil={isDonoDoPerfil}
         onFollowClick={handleFollowToggle}
+        isSeguindo={jaEstouSeguindo}
+        onConexaoClick={(tipo) => setModalConexao({ aberto: true, tipo })}
       />
 
-      {/* VERIFICAÇÃO DE PRIVACIDADE */}
       {perfilMapeado.isPrivado && !isDonoDoPerfil ? (
         <div className="mt-8 flex flex-col items-center justify-center p-12 rounded-2xl border-2 border-dashed border-white/10 bg-zinc-900/50">
           <span className="text-5xl mb-4">🔒</span>
@@ -144,11 +158,7 @@ function ConteudoDoPerfil() {
         </div>
       ) : (
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          
-          {/* COLUNA ESQUERDA: ABAS E VITRINES */}
           <div className="md:col-span-2 space-y-8">
-            
-            {/* SELETOR DE ABAS DINÂMICAS */}
             <section className="bg-zinc-900/40 rounded-2xl border border-white/5 p-6">
                 <div className="flex gap-6 mb-6 border-b border-white/5">
                     {["livro", "autores", "temas"].map((tab) => (
@@ -199,11 +209,9 @@ function ConteudoDoPerfil() {
                 </div>
             </section>
 
-            {/* Vitrine de Destaques (Arquivo 1) */}
             <VitrineDestaques userId={idParaBuscar as string} />
           </div>
 
-          {/* COLUNA DIREITA: RESUMO LATERAL */}
           <div className="md:col-span-1">
             <ResumoLateral 
               estante={perfilMapeado.estanteResumo} 
@@ -213,11 +221,19 @@ function ConteudoDoPerfil() {
           </div>
         </div>
       )}
+
+      {/* COMPONENTE ISOLADO DO MODAL DE CONEXÕES (SEGUIDORES / SEGUINDO) */}
+      <ModalConexoes 
+        aberto={modalConexao.aberto}
+        tipo={modalConexao.tipo}
+        usuarioId={idParaBuscar as string}
+        onClose={() => setModalConexao({ ...modalConexao, aberto: false })}
+      />
+
     </div>
   );
 }
 
-// 3. EXPORTAÇÃO COM BOUNDARY DE SUSPENSE
 export default function PerfilPage() {
   return (
     <Suspense fallback={<div className="max-w-7xl mx-auto w-full pt-4"><SkeletonCabecalho /></div>}>

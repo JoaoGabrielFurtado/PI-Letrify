@@ -1,11 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import EditorPerfil from "./EditorPerfil";
 import { authService } from "@/app/lib/authService";
 
-// ----------------------------------------------------------------------
-// 1. O SKELETON DO CABEÇALHO
-// ----------------------------------------------------------------------
 export function SkeletonCabecalho() {
   return (
     <div className="animate-pulse relative mb-8">
@@ -35,9 +32,6 @@ export function SkeletonCabecalho() {
   );
 }
 
-// ----------------------------------------------------------------------
-// 2. O COMPONENTE REAL UNIFICADO
-// ----------------------------------------------------------------------
 interface CabecalhoProps {
   nome: string;
   cidade: string;
@@ -46,7 +40,9 @@ interface CabecalhoProps {
   bannerUrl: string;
   estatisticas: { seguindo: number; seguidores: number };
   isDonoDoPerfil: boolean;
-  onFollowClick?: () => void; 
+  onFollowClick?: () => Promise<void>; 
+  isSeguindo: boolean;
+  onConexaoClick: (tipo: "seguidores" | "seguindo") => void;
 }
 
 export default function CabecalhoPerfil({
@@ -57,7 +53,9 @@ export default function CabecalhoPerfil({
   bannerUrl: initialBanner,
   estatisticas,
   isDonoDoPerfil,
-  onFollowClick
+  onFollowClick,
+  isSeguindo,
+  onConexaoClick
 }: CabecalhoProps) {
   
   const [dadosPerfil, setDadosPerfil] = useState({
@@ -69,6 +67,41 @@ export default function CabecalhoPerfil({
   });
 
   const [isEditorAberto, setIsEditorAberto] = useState(false);
+  const [estaSeguindoLocal, setEstaSeguindoLocal] = useState(isSeguindo);
+  const [processandoFollow, setProcessandoFollow] = useState(false);
+
+  useEffect(() => {
+    setEstaSeguindoLocal(isSeguindo);
+  }, [isSeguindo]);
+
+  // 3. Função de clique ultra-reativa
+  const handleFollowAction = async () => {
+    if (!onFollowClick || processandoFollow) return;
+    
+    // Inverte o visual IMEDIATAMENTE na tela do usuário
+    setEstaSeguindoLocal(!estaSeguindoLocal);
+    setProcessandoFollow(true);
+
+    try {
+      await onFollowClick(); // Executa a requisição fetch da Page.tsx
+    } catch (error) {
+      // Se der erro na API, desfaz a alteração visual para não mentir pro usuário
+      setEstaSeguindoLocal(isSeguindo);
+      console.error("Erro ao seguir usuário:", error);
+    } finally {
+      setProcessandoFollow(false);
+    }
+  };
+
+  useEffect(() => {
+    setDadosPerfil({
+      nome: initialNome,
+      cidade: initialCidade,
+      descricao: initialDescricao,
+      fotoPerfil: initialFoto,
+      bannerUrl: initialBanner
+    });
+  }, [initialNome, initialCidade, initialDescricao, initialFoto, initialBanner]);
 
   const handleSalvarDados = async (novosDados: any) => {
     try {
@@ -127,7 +160,7 @@ export default function CabecalhoPerfil({
             <div 
               className="w-36 h-36 flex items-center justify-center text-5xl font-bold shadow-xl border-4 object-cover overflow-hidden"
               style={{ 
-                backgroundColor: 'var(--cor-primaria)', // Cor do segundo arquivo
+                backgroundColor: 'var(--cor-primaria)', 
                 color: 'var(--cor-botao-texto)', 
                 borderColor: 'var(--cor-fundo-card)', 
                 borderRadius: '2rem' 
@@ -149,27 +182,54 @@ export default function CabecalhoPerfil({
 
           {/* INFOS E BOTÕES */}
           <div className="flex-1 mt-4 md:mt-2 flex flex-col justify-between">
-            
+
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--cor-texto-principal)' }}>
                 {dadosPerfil.nome}
               </h1>
-              
+  
               {isDonoDoPerfil ? (
                 <button 
                   onClick={() => setIsEditorAberto(true)}
                   className="px-5 py-2 text-sm font-bold rounded-xl shadow transition-transform hover:scale-105 active:scale-95"
-                  style={{ backgroundColor: 'var(--cor-fundo-app)', color: 'var(--cor-texto-principal)', border: '2px solid var(--cor-destaque)' }}
+                  style={{ 
+                    backgroundColor: 'var(--cor-fundo-app)', 
+                    color: 'var(--cor-texto-principal)', 
+                    border: '2px solid var(--cor-destaque)' 
+                   }}
                 >
                   Editar Perfil
                 </button>
               ) : (
                 <button 
-                  onClick={onFollowClick} 
-                  className="px-8 py-2 text-sm font-bold rounded-xl shadow transition-transform hover:scale-105 active:scale-95"
-                  style={{ backgroundColor: 'var(--cor-botao-primario)', color: 'var(--cor-botao-texto)' }}
+                  onClick={handleFollowAction} 
+                  disabled={processandoFollow}
+                  // O segredo está aqui: adicionamos a classe 'group' para controlar o hover do texto interno de forma elegante
+                  className={`group px-8 py-2 text-sm font-bold rounded-xl shadow transition-all hover:scale-105 active:scale-95 disabled:opacity-40 flex items-center gap-2 border-2
+                    ${estaSeguindoLocal 
+                      ? "bg-zinc-200/90 dark:bg-zinc-800/90 hover:bg-red-500/10 hover:text-red-600 border-zinc-300 dark:border-zinc-700 hover:border-red-500/30 text-zinc-800 dark:text-zinc-200" 
+                      : "border-transparent"
+                    }`}
+                  style={!estaSeguindoLocal ? { 
+                    backgroundColor: 'var(--cor-botao-primario)', 
+                    color: 'var(--cor-botao-texto)' 
+                  } : undefined}
                 >
-                  Seguir
+                  {processandoFollow ? (
+                    // Um spinner discreto ao lado do texto para mostrar que está salvando no banco C#
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                      <span>{estaSeguindoLocal ? "Seguindo" : "Seguir"}</span>
+                    </div>
+                  ) : estaSeguindoLocal ? (
+                    <>
+                      {/* O texto padrão é 'Seguindo', mas ao passar o mouse (group-hover), vira 'Parar de seguir' */}
+                      <span className="block group-hover:hidden">Seguindo</span>
+                      <span className="hidden group-hover:block text-red-600">Parar de seguir</span>
+                    </>
+                  ) : (
+                    "Seguir"
+                  )}
                 </button>
               )}
             </div>
@@ -179,14 +239,23 @@ export default function CabecalhoPerfil({
                 {dadosPerfil.descricao || <span className="italic opacity-60">Este usuário ainda não escreveu uma biografia.</span>}
               </div>
 
-              {/* CONEXÕES COM FALLBACK (Zera caso estatísticas seja null) */}
+              {/* CONEXÕES TOTALMENTE INTERATIVAS */}
               <div className="flex gap-4 text-sm font-semibold shrink-0 mb-1">
-                <span className="cursor-pointer hover:underline decoration-2" style={{ textDecorationColor: 'var(--cor-primaria)' }}>
-                  <strong style={{ color: 'var(--cor-texto-principal)' }}>{estatisticas?.seguindo || 0}</strong> <span style={{ color: 'var(--cor-texto-secundario)' }}>Seguindo</span>
-                </span>
-                <span className="cursor-pointer hover:underline decoration-2" style={{ textDecorationColor: 'var(--cor-primaria)' }}>
-                  <strong style={{ color: 'var(--cor-texto-principal)' }}>{estatisticas?.seguidores || 0}</strong> <span style={{ color: 'var(--cor-texto-secundario)' }}>Seguidores</span>
-                </span>
+                <button 
+                  onClick={() => onConexaoClick("seguindo")}
+                  className="hover:underline text-left group" 
+                >
+                  <strong style={{ color: 'var(--cor-texto-principal)' }}>{estatisticas?.seguindo || 0}</strong>{" "}
+                  <span style={{ color: 'var(--cor-texto-secundario)' }} className="group-hover:text-blue-400 transition-colors">Seguindo</span>
+                </button>
+                
+                <button 
+                  onClick={() => onConexaoClick("seguidores")}
+                  className="hover:underline text-left group" 
+                >
+                  <strong style={{ color: 'var(--cor-texto-principal)' }}>{estatisticas?.seguidores || 0}</strong>{" "}
+                  <span style={{ color: 'var(--cor-texto-secundario)' }} className="group-hover:text-blue-400 transition-colors">Seguidores</span>
+                </button>
               </div>
             </div>
           </div>

@@ -11,8 +11,6 @@ using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
 var connectionString = builder.Configuration.GetConnectionString("Azure");
 builder.Services.AddDbContext<Banco>(options =>
     options.UseSqlServer(connectionString));
@@ -21,7 +19,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
 });
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
 builder.Services.AddOpenApi();
 
 builder.Services.AddCors(options =>
@@ -32,7 +30,7 @@ builder.Services.AddCors(options =>
 
 var chaveSecreta = builder.Configuration["Jwt:Key"] ?? throw new Exception("A chave secreta do JWT não foi encontrada!");
 var chaveEmBytes = Encoding.UTF8.GetBytes(chaveSecreta);
- 
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -40,22 +38,39 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    options.RequireHttpsMetadata = false; // alterar caso deixe o projeto online (= true)
+    options.RequireHttpsMetadata = false;
     options.SaveToken = true;
 
     options.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateIssuerSigningKey = true, 
+        ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(chaveEmBytes),
 
-        ValidateIssuer = true, 
+        ValidateIssuer = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
 
-        ValidateAudience = true, 
+        ValidateAudience = true,
         ValidAudience = builder.Configuration["Jwt:Audience"],
 
-        ValidateLifetime = true, 
-        ClockSkew = TimeSpan.Zero 
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+
+    // O front envia: new HubConnectionBuilder().withUrl("/hubs/notificacoes?access_token=SEU_TOKEN")
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+
+            if (!string.IsNullOrEmpty(accessToken) &&
+                path.StartsWithSegments("/hubs"))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -63,6 +78,7 @@ builder.Services.AddHttpClient<GeminiServices>();
 builder.Services.AddSingleton<QdrantServices>();
 builder.Services.AddHostedService<LimpezaBancoChat>();
 builder.Services.AddSignalR();
+builder.Services.AddScoped<NotificacaoService>(); 
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -76,22 +92,23 @@ builder.Services.AddRateLimiter(options =>
         return RateLimitPartition.GetFixedWindowLimiter(partitionKey: usuarioId, factory: _ =>
             new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 5, 
-                Window = TimeSpan.FromMinutes(1), 
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                QueueLimit = 0 
+                QueueLimit = 0
             });
     });
 });
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapControllers();
     app.MapHub<ChatHub>("/hubs/chat");
+    app.MapHub<NotificacaoHub>("/hubs/notificacoes");
+    app.MapHub<GrupoHub>("/hubs/grupo");
 }
 
 app.UseHttpsRedirection();
@@ -100,7 +117,7 @@ app.UseStaticFiles();
 app.UseCors("PermitirTudo");
 
 app.UseAuthentication();
-app.UseRateLimiter();    
+app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapControllers();

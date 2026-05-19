@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using pi_projetolivros.DTO.Usuario;
+using pi_projetolivros.Servicos;
 using pi_projetolivros_banco;
 using System.Security.Claims;
 
@@ -13,14 +14,16 @@ namespace pi_projetolivros.Controllers.Usuario;
 public class SeguidoresController : ControllerBase
 {
     private readonly Banco _contexto;
+    private readonly NotificacaoService _notificacaoService; 
 
-    public SeguidoresController(Banco contexto, IConfiguration configuration)
+    public SeguidoresController(Banco contexto, IConfiguration configuration, NotificacaoService notificacaoService)
     {
         _contexto = contexto;
+        _notificacaoService = notificacaoService; 
     }
 
-    [HttpPost("seguir/{idSeguido}")] 
-    public async Task<IActionResult> SeguirEPararDeSeguir([FromRoute] int idSeguido) 
+    [HttpPost("seguir/{idSeguido}")]
+    public async Task<IActionResult> SeguirEPararDeSeguir([FromRoute] int idSeguido)
     {
         var idSeguidor = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (!int.TryParse(idSeguidor, out int SeguidorId))
@@ -52,11 +55,22 @@ public class SeguidoresController : ControllerBase
             });
             await _contexto.SaveChangesAsync();
 
+            var nomeSeguidor = await _contexto.Usuarios
+                .Where(u => u.Id == SeguidorId)
+                .Select(u => u.Nome)
+                .FirstOrDefaultAsync();
+
+            await _notificacaoService.EnviarAsync(
+                usuarioDestinoId: idSeguido,
+                tipo: "Seguidor",
+                conteudo: $"{nomeSeguidor} começou a seguir você."
+            );
+
             return Ok(new { message = "Você começou a seguir esta pessoa!" });
         }
     }
 
-    [HttpGet("seguidores/{id?}")] 
+    [HttpGet("seguidores/{id?}")]
     public async Task<IActionResult> RetornaSeguidores(int? id)
     {
         int alvo;
@@ -73,7 +87,7 @@ public class SeguidoresController : ControllerBase
         }
 
         var osSeguidores = await _contexto.Seguidores
-            .AsNoTracking() 
+            .AsNoTracking()
             .Include(s => s.SeguidorUsuario)
             .Where(s => s.SeguidoId == alvo)
             .Select(s => new
@@ -87,7 +101,7 @@ public class SeguidoresController : ControllerBase
         return Ok(osSeguidores);
     }
 
-    [HttpGet("seguindo/{id?}")] 
+    [HttpGet("seguindo/{id?}")]
     public async Task<IActionResult> RetornaSeguindo(int? id)
     {
         int alvo;
@@ -104,7 +118,7 @@ public class SeguidoresController : ControllerBase
         }
 
         var pessoasSeguidas = await _contexto.Seguidores
-            .AsNoTracking() 
+            .AsNoTracking()
             .Include(s => s.SeguidoUsuario)
             .Where(s => s.SeguidorId == alvo)
             .Select(s => new

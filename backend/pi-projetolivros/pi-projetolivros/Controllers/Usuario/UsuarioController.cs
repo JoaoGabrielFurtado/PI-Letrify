@@ -43,6 +43,50 @@ public class UsuarioController : ControllerBase
         return Ok(perfilPublico);
     }
 
+    [HttpGet("usuariosPorNome")]
+    public async Task<IActionResult> RetornaUsuariosPorNome(
+        [FromQuery] string nome,
+        [FromQuery] int pagina = 1,
+        [FromQuery] int tamanhoPagina = 10)
+    {
+        if (string.IsNullOrWhiteSpace(nome))
+            return BadRequest(new { erro = "O nome para pesquisa não pode estar vazio." });
+
+        if (pagina < 1) pagina = 1;
+        if (tamanhoPagina < 1 || tamanhoPagina > 50) tamanhoPagina = 10;
+
+        var nomeTratado = nome.Trim();
+
+        var query = _contexto.Usuarios
+            .AsNoTracking()
+            .Where(u => u.Nome.Contains(nomeTratado)); 
+
+        var totalEncontrados = await query.CountAsync();
+
+        var usuarios = await query
+            .OrderBy(u => u.Nome)
+            .Skip((pagina - 1) * tamanhoPagina)
+            .Take(tamanhoPagina)
+            .Select(u => new
+            {
+                u.Id,
+                u.Nome,
+                u.Cidade,
+                u.FotoPerfil
+            })
+            .ToListAsync();
+
+        var temMais = (pagina * tamanhoPagina) < totalEncontrados;
+
+        return Ok(new
+        {
+            resultados = usuarios,
+            paginaAtual = pagina,
+            totalEncontrados,
+            temMais        
+        });
+    }
+
 
     // Usuario editar o proprio perfil
     [HttpPut("editar")]

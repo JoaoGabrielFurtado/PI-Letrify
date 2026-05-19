@@ -31,6 +31,13 @@ public partial class Banco : DbContext
     public virtual DbSet<Favorito> Favoritos { get; set; }
     public virtual DbSet<Seguidor> Seguidores { get; set; }
     public DbSet<MensagemChat> MensagensChat { get; set; }
+    public DbSet<Notificacao> Notificacoes { get; set; }
+    public DbSet<Grupo> Grupos { get; set; }
+    public DbSet<UsuarioGrupo> UsuarioGrupos { get; set; }
+    public DbSet<SolicitacaoGrupo> SolicitacoesGrupo { get; set; }
+    public DbSet<PostGrupo> PostsGrupo { get; set; }
+    public DbSet<MensagemGrupo> MensagensGrupo { get; set; }
+    public DbSet<CurtidaChat> CurtidasChat { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer("Name=ConnectionStrings:Azure");
@@ -209,6 +216,161 @@ public partial class Banco : DbContext
                   .WithMany(m => m.Respostas)
                   .HasForeignKey(m => m.MensagemPaiId)
                   .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(m => m.Grupo)
+                  .WithMany()
+                  .HasForeignKey(m => m.GrupoId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<Notificacao>(entity =>
+        {
+            entity.HasKey(n => n.Id);
+
+            entity.ToTable("Notificacoes");
+
+            entity.Property(n => n.Tipo)
+                  .IsRequired()
+                  .HasMaxLength(20);
+
+            entity.Property(n => n.Conteudo)
+                  .IsRequired()
+                  .HasMaxLength(255);
+
+            entity.Property(n => n.Lida)
+                  .HasDefaultValue(false);
+
+            entity.Property(n => n.DataCriacao)
+                  .HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(n => n.Usuario)
+                  .WithMany()
+                  .HasForeignKey(n => n.UsuarioId)
+                  .OnDelete(DeleteBehavior.Cascade)
+                  .HasConstraintName("FK_Notificacoes_Usuarios");
+        });
+
+        modelBuilder.Entity<Grupo>(entity =>
+        {
+            entity.HasKey(g => g.Id);
+            entity.ToTable("Grupos");
+
+            entity.Property(g => g.Nome).IsRequired().HasMaxLength(100);
+            entity.Property(g => g.Descricao).HasMaxLength(500);
+            entity.Property(g => g.Status).IsRequired().HasMaxLength(10);
+            entity.Property(g => g.FotoCapa).HasMaxLength(255);
+            entity.Property(g => g.DataCriacao).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(g => g.Lider)
+                  .WithMany()
+                  .HasForeignKey(g => g.LiderId)
+                  .OnDelete(DeleteBehavior.NoAction)
+                  .HasConstraintName("FK_Grupos_Lider");
+        });
+
+        modelBuilder.Entity<UsuarioGrupo>(entity =>
+        {
+            entity.HasKey(ug => ug.Id);
+            entity.ToTable("UsuarioGrupo");
+
+            entity.HasIndex(ug => new { ug.UsuarioId, ug.GrupoId }).IsUnique();
+
+            entity.Property(ug => ug.Role).IsRequired().HasMaxLength(15);
+            entity.Property(ug => ug.DataEntrada).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(ug => ug.Usuario)
+                  .WithMany()
+                  .HasForeignKey(ug => ug.UsuarioId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(ug => ug.Grupo)
+                  .WithMany(g => g.Membros)
+                  .HasForeignKey(ug => ug.GrupoId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<SolicitacaoGrupo>(entity =>
+        {
+            entity.HasKey(s => s.Id);
+            entity.ToTable("SolicitacaoGrupo");
+
+            entity.HasIndex(s => new { s.UsuarioId, s.GrupoId }).IsUnique();
+
+            entity.Property(s => s.Status).IsRequired().HasMaxLength(10);
+            entity.Property(s => s.DataSolicitacao).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(s => s.Usuario)
+                  .WithMany()
+                  .HasForeignKey(s => s.UsuarioId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(s => s.Grupo)
+                  .WithMany()
+                  .HasForeignKey(s => s.GrupoId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<PostGrupo>(entity =>
+        {
+            entity.HasKey(p => p.Id);
+            entity.ToTable("PostGrupo");
+
+            entity.Property(p => p.Conteudo).IsRequired().HasMaxLength(500);
+            entity.Property(p => p.DataPostagem).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(p => p.Grupo)
+                  .WithMany()
+                  .HasForeignKey(p => p.GrupoId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(p => p.Usuario)
+                  .WithMany()
+                  .HasForeignKey(p => p.UsuarioId)
+                  .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(p => p.PostPai)
+                  .WithMany(p => p.Respostas)
+                  .HasForeignKey(p => p.PostPaiId)
+                  .OnDelete(DeleteBehavior.NoAction);
+        });
+
+        modelBuilder.Entity<MensagemGrupo>(entity =>
+        {
+            entity.HasKey(m => m.Id);
+            entity.ToTable("MensagemGrupo");
+
+            entity.Property(m => m.Conteudo).IsRequired().HasMaxLength(300);
+            entity.Property(m => m.DataPostagem).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(m => m.Grupo)
+                  .WithMany()
+                  .HasForeignKey(m => m.GrupoId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(m => m.Usuario)
+                  .WithMany()
+                  .HasForeignKey(m => m.UsuarioId)
+                  .OnDelete(DeleteBehavior.NoAction);
+        });
+
+        modelBuilder.Entity<CurtidaChat>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+            entity.ToTable("CurtidaChat");
+
+            entity.HasIndex(c => new { c.UsuarioId, c.MensagemId }).IsUnique();
+
+            entity.Property(c => c.DataCurtida).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(c => c.Usuario)
+                  .WithMany()
+                  .HasForeignKey(c => c.UsuarioId)
+                  .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(c => c.Mensagem)
+                  .WithMany(m => m.Curtidas)
+                  .HasForeignKey(c => c.MensagemId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
 
         OnModelCreatingPartial(modelBuilder);

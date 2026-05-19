@@ -12,4 +12,8 @@ public class MensagemChat
     public virtual MensagemChat MensagemPai { get; set; }
     public virtual ICollection<MensagemChat> Respostas { get; set; }
     public DateTime DataPostagem { get; set; } = DateTime.UtcNow;
+    public virtual ICollection<CurtidaChat> Curtidas { get; set; } = new List<CurtidaChat>();
+
+    public int? GrupoId { get; set; }
+    public virtual Grupo Grupo { get; set; }
 }

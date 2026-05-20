@@ -50,6 +50,44 @@ public class GeminiServices
 
         return embeddingResponse?.embedding?.values ?? new float[0];
     }
+
+    public async Task<string> GerarTextoAsync(string prompt)
+    {
+        var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={_apiKey}";
+
+        var body = new
+        {
+            contents = new[]
+            {
+            new
+            {
+                parts = new[]
+                {
+                    new { text = prompt }
+                }
+            }
+        }
+        };
+
+        var response = await _httpClient.PostAsJsonAsync(url, body);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var erroDoGoogle = await response.Content.ReadAsStringAsync();
+            throw new Exception($"Erro na API do Gemini: {erroDoGoogle}");
+        }
+
+        var result = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        var texto = result
+            .GetProperty("candidates")[0]
+            .GetProperty("content")
+            .GetProperty("parts")[0]
+            .GetProperty("text")
+            .GetString();
+
+        return texto ?? "Não foi possível gerar a análise.";
+    }
 }
 
 public class EmbeddingResponse

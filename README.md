@@ -68,6 +68,9 @@ O `NotificacaoService` centraliza a criação e o disparo de notificações: per
 #### 🤖 Matchmaking com IA e Busca Vetorial
 O `MatchController` constrói um **perfil semântico textual** do leitor, converte em **vetor de embeddings** via Google Gemini, persiste no **Qdrant** e realiza **busca por similaridade cosseno**. O resultado inclui perfil literário completo de cada match (livros lidos, autores e temas preferidos) obtido em uma única query batch, evitando o problema N+1.
 
+#### 👑 Sistema Premium com Análise de IA
+Usuários Premium têm acesso ao `PremiumController`, que coleta todo o histórico de leitura do usuário (lidos, lendo, quero ler, autores e temas favoritos) e envia um prompt enriquecido para a **Google Gemini** gerar dois blocos: uma análise personalizada do perfil literário e uma lista de 5 recomendações com justificativa. A ativação do Premium é controlada por um endpoint toggle preparado para integração futura com gateways de pagamento.
+
 ---
 
 ## ✨ Funcionalidades
@@ -82,6 +85,7 @@ O `MatchController` constrói um **perfil semântico textual** do leitor, conver
 - **Grupos de Leitura:** CRUD completo, sistema de roles (Líder/Admin/Membro), solicitações de acesso para grupos fechados, posts internos com threads e chat em tempo real isolado por sala.
 - **Exploração de Livros:** Busca na Open Library por tema, título ou autor com paginação.
 - **Matchmaking com IA:** Descoberta de leitores compatíveis com perfil literário detalhado e score de similaridade percentual.
+- **Usuário Premium** ⭐**:** Análise literária personalizada e recomendações geradas pela Google Gemini com base em todo o histórico de leitura.
 
 ---
 
@@ -100,11 +104,12 @@ O `MatchController` constrói um **perfil semântico textual** do leitor, conver
 
 | Método | Rota | 🔒 Token | Descrição |
 |:---:|---|:---:|---|
-| `GET` | `/api/usuario/{id}` | ❌ | Retorna o perfil público de um usuário pelo ID. |
+| `GET` | `/api/usuario/{id}` | ❌ | Retorna o perfil público de um usuário pelo ID. Inclui campo `premium`. |
 | `GET` | `/api/usuario/usuariosPorNome` | ❌ | Busca usuários pelo nome com paginação. Params: `nome`, `pagina`, `tamanhoPagina`. Retorna `temMais` para controle do botão "Carregar mais". |
 | `PUT` | `/api/usuario/editar` | ✅ | Edita o perfil do usuário logado (multipart/form-data, suporta upload de foto). |
 | `GET` | `/api/usuario/informacoes/{id?}` | ✅ | Retorna estatísticas detalhadas: total de livros, top temas, top autores e livro favorito. |
 | `DELETE` | `/api/usuario/deletar` | ✅ | Deleta a conta do usuário logado e remove a foto do servidor. |
+| `PUT` | `/api/usuario/premium/{id}` | ✅ | Ativa ou desativa o Premium do usuário. Body: `{ "ativar": true }`. Preparado para integração com gateway de pagamento. |
 | `POST` | `/api/usuario/meus-livros` | ✅ | Adiciona ou atualiza um livro na estante com um status. |
 | `GET` | `/api/usuario/{id}/livros` | ❌ | Retorna a estante completa de um usuário (Lendo, Lido, Quero Ler). |
 | `DELETE` | `/api/usuario/meus-livros/{livroId}` | ✅ | Remove um livro da estante do usuário logado. |
@@ -183,6 +188,14 @@ O `MatchController` constrói um **perfil semântico textual** do leitor, conver
 
 ---
 
+### 👑 Premium — `/api/premium`
+
+| Método | Rota | 🔒 Token | Descrição |
+|:---:|---|:---:|---|
+| `GET` | `/api/premium/analise` | ✅ | **Exclusivo Premium.** Coleta todo o histórico de leitura do usuário e envia à Google Gemini para gerar: (1) análise personalizada do perfil literário e (2) 5 recomendações com justificativa. Retorna as estatísticas brutas junto com o texto gerado pela IA. |
+
+---
+
 ### 📖 Livros (Open Library) — `/api/livro`
 
 | Método | Rota | 🔒 Token | Descrição |
@@ -258,7 +271,8 @@ Como o projeto não utiliza Migrations, rode os scripts na seguinte ordem no SQL
 3. Notificacoes
 4. Grupos → UsuarioGrupo → SolicitacaoGrupo → PostGrupo → MensagemGrupo
 5. CurtidaChat
-6. ALTER TABLE MensagensChat ADD GrupoId (script de recrutamento)
+6. ALTER TABLE MensagensChat ADD GrupoId     ← recrutamento
+7. ALTER TABLE usuarios ADD premium BIT DEFAULT 0  ← premium
 ```
 
 **4. Crie as pastas de upload**
@@ -278,7 +292,7 @@ dotnet run
 https://localhost:7XXX/openapi
 ```
 
-> 💡 Os endpoints de `/api/match` ficam indisponíveis sem as chaves do Gemini e do Qdrant configuradas. Todos os outros funcionam normalmente.
+> 💡 Os endpoints de `/api/match` e `/api/premium/analise` ficam indisponíveis sem a chave do Gemini configurada. Todos os outros funcionam normalmente.
 
 ---
 

@@ -124,6 +124,9 @@ public partial class Banco : DbContext
             entity.Property(e => e.FotoPerfil)
                 .HasMaxLength(255)
                 .HasColumnName("foto_perfil");
+            entity.Property(e => e.Premium)
+                .HasColumnName("premium")
+                .HasDefaultValue(false);
         });
 
         modelBuilder.Entity<Avaliaco>(entity =>

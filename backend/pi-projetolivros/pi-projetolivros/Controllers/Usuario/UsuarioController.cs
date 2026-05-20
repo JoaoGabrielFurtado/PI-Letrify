@@ -269,6 +269,14 @@ public class UsuarioController : ControllerBase
         if (usuario == null)
             return NotFound(new { mensagem = "Usuário não encontrado." });
 
+        bool p = await _contexto.Usuarios
+            .AsNoTracking()
+            .Where(u => u.Id == targetUserId)
+            .Select(u => u.Premium)
+            .FirstOrDefaultAsync();
+
+        string pm = p ? "1" : "0";
+
         var livrosDoUsuario = await _contexto.SituacaoLivros
             .AsNoTracking()
         .Include(l => l.Livro)
@@ -336,7 +344,8 @@ public class UsuarioController : ControllerBase
                 nome = usuario.Nome,
                 foto = usuario.FotoPerfil,
                 seguidores = totalSeguidores,
-                seguindo = totalSeguindo
+                seguindo = totalSeguindo,
+                premium = pm
             },
             estatisticas = new
             {
@@ -350,7 +359,7 @@ public class UsuarioController : ControllerBase
                 id = livroFavorito.Livro.Id,
                 titulo = livroFavorito.Livro.Titulo,
                 autor = livroFavorito.Livro.Autor,
-            } : null 
+            } : null
         });
 
     }

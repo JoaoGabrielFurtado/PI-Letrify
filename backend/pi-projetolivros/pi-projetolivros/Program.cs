@@ -13,7 +13,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("Azure");
 builder.Services.AddDbContext<Banco>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlServer(connectionString, sqlOptions =>
+    {
+        sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5, 
+            maxRetryDelay: TimeSpan.FromSeconds(20), 
+            errorNumbersToAdd: null);
+    }));
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
@@ -24,10 +30,13 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("PermitirTudo",
-        builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+    options.AddPolicy("PermitirFrontend",
+        policy => policy
+            .WithOrigins("http://localhost:3000") // localhost do front
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials()); // Essa é a trava que permite o SignalR funcionar
 });
-
 var chaveSecreta = builder.Configuration["Jwt:Key"] ?? throw new Exception("A chave secreta do JWT não foi encontrada!");
 var chaveEmBytes = Encoding.UTF8.GetBytes(chaveSecreta);
 
@@ -114,7 +123,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
-app.UseCors("PermitirTudo");
+app.UseCors("PermitirFrontend");
 
 app.UseAuthentication();
 app.UseRateLimiter();

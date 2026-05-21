@@ -24,6 +24,7 @@ public class NotificacaoService
             UsuarioId = usuarioDestinoId,
             Tipo = tipo,
             Conteudo = conteudo,
+            Lida = false, 
             DataCriacao = DateTime.UtcNow
         };
 
@@ -36,11 +37,12 @@ public class NotificacaoService
             notificacao.Id,
             notificacao.Tipo,
             notificacao.Conteudo,
+            notificacao.Lida,
             notificacao.DataCriacao
         };
 
         await _hubContext.Clients
-            .Group($"usuario-{usuarioDestinoId}")
-            .SendAsync("ReceberNotificacao", payload);
+            .User(usuarioDestinoId.ToString())
+            .SendAsync("ReceberNovaNotificacao", payload);
     }
 }

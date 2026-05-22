@@ -86,6 +86,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddHttpClient<GeminiServices>();
 builder.Services.AddSingleton<QdrantServices>();
 builder.Services.AddHostedService<LimpezaBancoChat>();
+builder.Services.AddSingleton<CloudinaryService>();
 builder.Services.AddSignalR();
 builder.Services.AddScoped<NotificacaoService>(); 
 builder.Services.AddRateLimiter(options =>

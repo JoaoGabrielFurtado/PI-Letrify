@@ -72,10 +72,11 @@ public partial class Banco : DbContext
             entity.ToTable("situacao_livros");
 
             entity.Property(e => e.Id).HasColumnName("id");
+
             entity.Property(e => e.DataAtualizacao)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnType("timestamp without time zone")
+                .HasDefaultValueSql("GETDATE()") 
                 .HasColumnName("data_atualizacao");
+
             entity.Property(e => e.LivroId).HasColumnName("livro_id");
             entity.Property(e => e.Status)
                 .HasMaxLength(20)

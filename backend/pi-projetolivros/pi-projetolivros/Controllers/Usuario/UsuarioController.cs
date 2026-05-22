@@ -6,6 +6,7 @@ using pi_projetolivros.DTO.SituacaoLivros;
 using pi_projetolivros.DTO.Usuario;
 using pi_projetolivros.Models;
 using pi_projetolivros.Models.Banco;
+using pi_projetolivros.Servicos;
 using pi_projetolivros_banco;
 using System.Security.Claims;
 
@@ -16,9 +17,12 @@ namespace pi_projetolivros.Controllers.Usuario;
 public class UsuarioController : ControllerBase
 {
     private readonly Banco _contexto;
-    public UsuarioController(Banco contexto)
+    private readonly CloudinaryService _storageService;
+
+    public UsuarioController(Banco contexto, CloudinaryService storageService)
     {
         _contexto = contexto;
+        _storageService = storageService;
     }
 
     // Ver o perfil de qualquer usuário
@@ -106,18 +110,11 @@ public class UsuarioController : ControllerBase
 
         if (dto.Foto != null && dto.Foto.Length > 0)
         {
-            var extensao = Path.GetExtension(dto.Foto.FileName);
-
-            var nomeArquivoUnico = Guid.NewGuid().ToString() + extensao;
-
-            var caminhoFisico = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "fotos", nomeArquivoUnico);
-
-            using (var stream = new FileStream(caminhoFisico, FileMode.Create))
+            if (dto.Foto != null && dto.Foto.Length > 0)
             {
-                await dto.Foto.CopyToAsync(stream);
+                await _storageService.DeletarAsync(usuario.FotoPerfil);
+                usuario.FotoPerfil = await _storageService.UploadFotoPerfilAsync(dto.Foto);
             }
-
-            usuario.FotoPerfil = "/fotos/" + nomeArquivoUnico;
         }
 
         _contexto.Usuarios.Update(usuario);
@@ -378,14 +375,10 @@ public class UsuarioController : ControllerBase
 
         if (!string.IsNullOrEmpty(usuario.FotoPerfil))
         {
-            var nomeArquivo = usuario.FotoPerfil.Replace("/fotos/", "");
+            await _storageService.DeletarAsync(usuario.FotoPerfil);
 
-            var caminhoFisico = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "fotos", nomeArquivo);
-
-            if (System.IO.File.Exists(caminhoFisico))
-            {
-                System.IO.File.Delete(caminhoFisico);
-            }
+            _contexto.Usuarios.Remove(usuario);
+            await _contexto.SaveChangesAsync();
         }
 
         _contexto.Usuarios.Remove(usuario);

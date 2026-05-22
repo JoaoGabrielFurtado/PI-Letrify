@@ -18,15 +18,15 @@ public class GruposController : ControllerBase
     private readonly Banco _contexto;
     private readonly IHubContext<GrupoHub> _hubContext;
     private readonly NotificacaoService _notificacaoService;
+    private readonly CloudinaryService _cloudinaryService; // CLOUDINARY
 
-    public GruposController(Banco contexto, IHubContext<GrupoHub> hubContext, NotificacaoService notificacaoService)
+    public GruposController(Banco contexto, IHubContext<GrupoHub> hubContext, NotificacaoService notificacaoService, CloudinaryService cloudinaryService)
     {
         _contexto = contexto;
         _hubContext = hubContext;
         _notificacaoService = notificacaoService;
+        _cloudinaryService = cloudinaryService; // CLOUDINARY
     }
-
-    // ── GRUPOS ───────────────────────────────────────────────────────────────
 
     [HttpGet]
     [AllowAnonymous]
@@ -97,15 +97,9 @@ public class GruposController : ControllerBase
             LiderId = usuarioId.Value
         };
 
+        // CLOUDINARY: substitui o Path.Combine + FileStream
         if (dto.Foto != null && dto.Foto.Length > 0)
-        {
-            var ext = Path.GetExtension(dto.Foto.FileName);
-            var nomeArquivo = Guid.NewGuid().ToString() + ext;
-            var caminho = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "grupos", nomeArquivo);
-            using var stream = new FileStream(caminho, FileMode.Create);
-            await dto.Foto.CopyToAsync(stream);
-            grupo.FotoCapa = "/grupos/" + nomeArquivo;
-        }
+            grupo.FotoCapa = await _cloudinaryService.UploadFotoGrupoAsync(dto.Foto);
 
         _contexto.Grupos.Add(grupo);
         await _contexto.SaveChangesAsync();
@@ -137,14 +131,11 @@ public class GruposController : ControllerBase
         if (!string.IsNullOrWhiteSpace(dto.Descricao)) grupo.Descricao = dto.Descricao;
         if (!string.IsNullOrWhiteSpace(dto.Status)) grupo.Status = dto.Status;
 
+        // CLOUDINARY: deleta a capa antiga antes de subir a nova
         if (dto.Foto != null && dto.Foto.Length > 0)
         {
-            var ext = Path.GetExtension(dto.Foto.FileName);
-            var nomeArquivo = Guid.NewGuid().ToString() + ext;
-            var caminho = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "grupos", nomeArquivo);
-            using var stream = new FileStream(caminho, FileMode.Create);
-            await dto.Foto.CopyToAsync(stream);
-            grupo.FotoCapa = "/grupos/" + nomeArquivo;
+            await _cloudinaryService.DeletarAsync(grupo.FotoCapa);
+            grupo.FotoCapa = await _cloudinaryService.UploadFotoGrupoAsync(dto.Foto);
         }
 
         await _contexto.SaveChangesAsync();
@@ -163,13 +154,14 @@ public class GruposController : ControllerBase
         if (grupo.LiderId != usuarioId.Value)
             return Forbid();
 
+        // CLOUDINARY: remove a foto de capa antes de deletar o grupo
+        await _cloudinaryService.DeletarAsync(grupo.FotoCapa);
+
         _contexto.Grupos.Remove(grupo);
         await _contexto.SaveChangesAsync();
 
         return Ok(new { mensagem = "Grupo deletado com sucesso." });
     }
-
-    // ── MEMBROS ──────────────────────────────────────────────────────────────
 
     [HttpPost("{id}/entrar")]
     public async Task<IActionResult> Entrar([FromRoute] int id)
@@ -215,7 +207,6 @@ public class GruposController : ControllerBase
             return Ok(new { mensagem = "Solicitação enviada! Aguarde aprovação do líder." });
         }
 
-        // Grupo aberto → entra direto
         _contexto.UsuarioGrupos.Add(new UsuarioGrupo
         {
             UsuarioId = usuarioId.Value,
@@ -247,8 +238,6 @@ public class GruposController : ControllerBase
 
         return Ok(new { mensagem = "Você saiu do grupo." });
     }
-
-    // ── SOLICITAÇÕES (Lider/Admin) ───────────────────────────────────────────
 
     [HttpGet("{id}/solicitacoes")]
     public async Task<IActionResult> ListarSolicitacoes([FromRoute] int id)
@@ -324,8 +313,6 @@ public class GruposController : ControllerBase
         return Ok(new { mensagem = $"Solicitação {acao.ToLower()} com sucesso." });
     }
 
-    // ── ROLES (apenas Lider) ─────────────────────────────────────────────────
-
     [HttpPut("{id}/membros/{membroId}/role")]
     public async Task<IActionResult> AlterarRole(
         [FromRoute] int id,
@@ -383,8 +370,6 @@ public class GruposController : ControllerBase
 
         return Ok(new { mensagem = "Membro removido do grupo." });
     }
-
-    // ── POSTS INTERNOS ───────────────────────────────────────────────────────
 
     [HttpGet("{id}/posts")]
     public async Task<IActionResult> ListarPosts(
@@ -476,7 +461,6 @@ public class GruposController : ControllerBase
         if (post == null)
             return NotFound(new { erro = "Post não encontrado." });
 
-        // Dono do post, Admin ou Lider podem deletar
         var ehDono = post.UsuarioId == usuarioId.Value;
         var ehAdminOuLider = await IsAdminOuLider(usuarioId.Value, id);
 
@@ -491,8 +475,6 @@ public class GruposController : ControllerBase
 
         return Ok(new { mensagem = "Post deletado com sucesso." });
     }
-
-    // ── CHAT DO GRUPO ────────────────────────────────────────────────────────
 
     [HttpPost("{id}/chat")]
     public async Task<IActionResult> EnviarMensagem([FromRoute] int id, [FromBody] EnviarMensagemGrupoDto dto)
@@ -563,8 +545,6 @@ public class GruposController : ControllerBase
 
         return Ok(mensagens);
     }
-
-    // ── Helpers ──────────────────────────────────────────────────────────────
 
     private int? ObterUsuarioId()
     {

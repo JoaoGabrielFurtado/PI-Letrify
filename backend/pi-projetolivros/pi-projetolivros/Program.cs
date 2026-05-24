@@ -16,8 +16,8 @@ builder.Services.AddDbContext<Banco>(options =>
     options.UseSqlServer(connectionString, sqlOptions =>
     {
         sqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 5, 
-            maxRetryDelay: TimeSpan.FromSeconds(20), 
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(20),
             errorNumbersToAdd: null);
     }));
 
@@ -32,11 +32,16 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("PermitirFrontend",
         policy => policy
-            .WithOrigins("http://localhost:3000") // localhost do front
+            .WithOrigins(
+                "http://localhost:3000",
+                "http://localhost:5173",
+                "https://letrify.vercel.app"  // produção
+            )
             .AllowAnyMethod()
             .AllowAnyHeader()
-            .AllowCredentials()); // Essa é a trava que permite o SignalR funcionar
+            .AllowCredentials());
 });
+
 var chaveSecreta = builder.Configuration["Jwt:Key"] ?? throw new Exception("A chave secreta do JWT não foi encontrada!");
 var chaveEmBytes = Encoding.UTF8.GetBytes(chaveSecreta);
 
@@ -65,7 +70,6 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero
     };
 
-    // O front envia: new HubConnectionBuilder().withUrl("/hubs/notificacoes?access_token=SEU_TOKEN")
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
@@ -88,7 +92,7 @@ builder.Services.AddSingleton<QdrantServices>();
 builder.Services.AddHostedService<LimpezaBancoChat>();
 builder.Services.AddSingleton<CloudinaryService>();
 builder.Services.AddSignalR();
-builder.Services.AddScoped<NotificacaoService>(); 
+builder.Services.AddScoped<NotificacaoService>();
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -112,13 +116,10 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
+// Swagger apenas em desenvolvimento
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.MapControllers();
-    app.MapHub<ChatHub>("/hubs/chat");
-    app.MapHub<NotificacaoHub>("/hubs/notificacoes");
-    app.MapHub<GrupoHub>("/hubs/grupo");
 }
 
 app.UseHttpsRedirection();
@@ -130,6 +131,10 @@ app.UseAuthentication();
 app.UseRateLimiter();
 app.UseAuthorization();
 
+// Rotas sempre ativas — desenvolvimento e produção
 app.MapControllers();
+app.MapHub<ChatHub>("/hubs/chat");
+app.MapHub<NotificacaoHub>("/hubs/notificacoes");
+app.MapHub<GrupoHub>("/hubs/grupo");
 
 app.Run();

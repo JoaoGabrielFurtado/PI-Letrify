@@ -40,3 +40,9 @@ public class EnviarMensagemGrupoDto
 {
     public string Conteudo { get; set; } = string.Empty;
 }
+
+// DTO/Grupos/AlterarStatusGrupoDto.cs
+public class AlterarStatusGrupoDto
+{
+    public string Status { get; set; } = string.Empty; // "Aberto" | "Fechado"
+}

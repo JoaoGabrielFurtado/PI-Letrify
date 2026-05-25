@@ -18,14 +18,14 @@ public class GruposController : ControllerBase
     private readonly Banco _contexto;
     private readonly IHubContext<GrupoHub> _hubContext;
     private readonly NotificacaoService _notificacaoService;
-    private readonly CloudinaryService _cloudinaryService; // CLOUDINARY
+    private readonly CloudinaryService _cloudinaryService; 
 
     public GruposController(Banco contexto, IHubContext<GrupoHub> hubContext, NotificacaoService notificacaoService, CloudinaryService cloudinaryService)
     {
         _contexto = contexto;
         _hubContext = hubContext;
         _notificacaoService = notificacaoService;
-        _cloudinaryService = cloudinaryService; // CLOUDINARY
+        _cloudinaryService = cloudinaryService; 
     }
 
     [HttpGet]
@@ -83,37 +83,36 @@ public class GruposController : ControllerBase
         return Ok(grupo);
     }
 
-    [HttpPost]
-    public async Task<IActionResult> Criar([FromForm] CriarGrupoDto dto)
+[HttpPost]
+public async Task<IActionResult> Criar([FromForm] CriarGrupoDto dto)
+{
+    var usuarioId = ObterUsuarioId();
+    if (usuarioId == null) return Unauthorized();
+
+    var grupo = new Grupo
     {
-        var usuarioId = ObterUsuarioId();
-        if (usuarioId == null) return Unauthorized();
+        Nome      = dto.Nome,
+        Descricao = dto.Descricao,
+        Status    = dto.Status ?? "Aberto",
+        LiderId   = usuarioId.Value
+    };
 
-        var grupo = new Grupo
-        {
-            Nome = dto.Nome,
-            Descricao = dto.Descricao,
-            Status = dto.Status ?? "Aberto",
-            LiderId = usuarioId.Value
-        };
+    if (dto.Foto != null && dto.Foto.Length > 0)
+        grupo.FotoCapa = await _cloudinaryService.UploadFotoGrupoAsync(dto.Foto);
 
-        // CLOUDINARY: substitui o Path.Combine + FileStream
-        if (dto.Foto != null && dto.Foto.Length > 0)
-            grupo.FotoCapa = await _cloudinaryService.UploadFotoGrupoAsync(dto.Foto);
+    _contexto.Grupos.Add(grupo);
+    await _contexto.SaveChangesAsync();
 
-        _contexto.Grupos.Add(grupo);
-        await _contexto.SaveChangesAsync();
+    _contexto.UsuarioGrupos.Add(new UsuarioGrupo
+    {
+        UsuarioId = usuarioId.Value,
+        GrupoId   = grupo.Id,
+        Role      = "Lider"
+    });
+    await _contexto.SaveChangesAsync();
 
-        _contexto.UsuarioGrupos.Add(new UsuarioGrupo
-        {
-            UsuarioId = usuarioId.Value,
-            GrupoId = grupo.Id,
-            Role = "Lider"
-        });
-        await _contexto.SaveChangesAsync();
-
-        return Ok(new { mensagem = "Grupo criado com sucesso!", grupoId = grupo.Id });
-    }
+    return Ok(new { mensagem = "Grupo criado com sucesso!", grupoId = grupo.Id });
+}
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Editar([FromRoute] int id, [FromForm] EditarGrupoDto dto)
@@ -129,9 +128,7 @@ public class GruposController : ControllerBase
 
         if (!string.IsNullOrWhiteSpace(dto.Nome)) grupo.Nome = dto.Nome;
         if (!string.IsNullOrWhiteSpace(dto.Descricao)) grupo.Descricao = dto.Descricao;
-        if (!string.IsNullOrWhiteSpace(dto.Status)) grupo.Status = dto.Status;
 
-        // CLOUDINARY: deleta a capa antiga antes de subir a nova
         if (dto.Foto != null && dto.Foto.Length > 0)
         {
             await _cloudinaryService.DeletarAsync(grupo.FotoCapa);
@@ -140,6 +137,29 @@ public class GruposController : ControllerBase
 
         await _contexto.SaveChangesAsync();
         return Ok(new { mensagem = "Grupo atualizado com sucesso!" });
+    }
+
+    [HttpPut("{id}/status")]
+    public async Task<IActionResult> AlterarStatus([FromRoute] int id, [FromBody] AlterarStatusGrupoDto dto)
+    {
+        var usuarioId = ObterUsuarioId();
+        if (usuarioId == null) return Unauthorized();
+
+        if (!await IsAdminOuLider(usuarioId.Value, id))
+            return Forbid();
+
+        var statusPermitidos = new[] { "Aberto", "Fechado" };
+        if (!statusPermitidos.Contains(dto.Status))
+            return BadRequest(new { erro = "Status inválido. Use 'Aberto' ou 'Fechado'." });
+
+        var grupo = await _contexto.Grupos.FindAsync(id);
+        if (grupo == null)
+            return NotFound(new { erro = "Grupo não encontrado." });
+
+        grupo.Status = dto.Status;
+        await _contexto.SaveChangesAsync();
+
+        return Ok(new { mensagem = $"Status do grupo alterado para '{dto.Status}' com sucesso." });
     }
 
     [HttpDelete("{id}")]
@@ -365,11 +385,24 @@ public class GruposController : ControllerBase
         if (membro.Role == "Lider")
             return BadRequest(new { erro = "Não é possível remover o líder." });
 
+        if (membro.Role == "Admin")
+        {
+            var roleDoRequisitante = await _contexto.UsuarioGrupos
+                .Where(ug => ug.UsuarioId == usuarioId && ug.GrupoId == id)
+                .Select(ug => ug.Role)
+                .FirstOrDefaultAsync();
+
+            if (roleDoRequisitante != "Lider")
+                return Forbid();
+        }
+
         _contexto.UsuarioGrupos.Remove(membro);
         await _contexto.SaveChangesAsync();
 
         return Ok(new { mensagem = "Membro removido do grupo." });
     }
+
+
 
     [HttpGet("{id}/posts")]
     public async Task<IActionResult> ListarPosts(
@@ -544,6 +577,27 @@ public class GruposController : ControllerBase
             .ToListAsync();
 
         return Ok(mensagens);
+    }
+
+    [HttpDelete("{id}/sair")]
+    public async Task<IActionResult> SairGrupo([FromRoute] int id)
+    {
+        var usuarioId = ObterUsuarioId();
+        if (usuarioId == null) return Unauthorized();
+
+        if (!await IsMembro(usuarioId.Value, id))
+            return Forbid();
+
+        var usuarioGrupo = await _contexto.UsuarioGrupos
+            .FirstOrDefaultAsync(u => u.UsuarioId == usuarioId && u.GrupoId == id); 
+
+        if (usuarioGrupo == null)
+            return NotFound(new { mensagem = "Vínculo com o grupo não encontrado." });
+
+        _contexto.UsuarioGrupos.Remove(usuarioGrupo);
+        await _contexto.SaveChangesAsync();
+
+        return Ok(new { mensagem = "Você saiu do grupo!" });
     }
 
     private int? ObterUsuarioId()

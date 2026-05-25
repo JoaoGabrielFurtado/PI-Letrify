@@ -39,6 +39,7 @@
 | **IA / Embeddings** | Google Gemini API |
 | **Busca Vetorial** | Qdrant (Vector Database) |
 | **Catálogo de Livros** | Open Library API (externa) |
+| **Armazenamento de Mídia** | Cloudinary |
 
 ---
 
@@ -69,23 +70,29 @@ O `NotificacaoService` centraliza a criação e o disparo de notificações: per
 O `MatchController` constrói um **perfil semântico textual** do leitor, converte em **vetor de embeddings** via Google Gemini, persiste no **Qdrant** e realiza **busca por similaridade cosseno**. O resultado inclui perfil literário completo de cada match (livros lidos, autores e temas preferidos) obtido em uma única query batch, evitando o problema N+1.
 
 #### 👑 Sistema Premium com Análise de IA
-Usuários Premium têm acesso ao `PremiumController`, que coleta todo o histórico de leitura do usuário (lidos, lendo, quero ler, autores e temas favoritos) e envia um prompt enriquecido para a **Google Gemini** gerar dois blocos: uma análise personalizada do perfil literário e uma lista de 5 recomendações com justificativa. A ativação do Premium é controlada por um endpoint toggle preparado para integração futura com gateways de pagamento.
+Usuários Premium têm acesso ao `PremiumController`, que coleta todo o histórico de leitura do usuário (lidos, lendo, quero ler, autores e temas favoritos) e envia um prompt enriquecido para a **Google Gemini** gerar dois blocos: uma análise personalizada do perfil literário e uma lista de 5 recomendações com justificativa. A ativação do Premium é feita pelo próprio usuário via endpoint dedicado, preparado para integração futura com gateways de pagamento.
+
+#### 🖼️ Armazenamento de Mídia com Cloudinary
+Fotos de perfil e capas de grupo são armazenadas no **Cloudinary**, eliminando a dependência do sistema de arquivos local. As URLs geradas são permanentes e públicas, sobrevivendo a deploys e reinicializações do servidor. O `CloudinaryService` centraliza upload e deleção para `UsuarioController` e `GruposController`.
+
+#### 🔑 Controle Granular de Permissões em Grupos
+O sistema de grupos implementa três níveis de permissão com regras específicas: o **Líder** tem controle total (editar nome, foto, descrição, apagar grupo, promover/rebaixar membros); **Admins** podem privar/desprivar o grupo e remover membros comuns, mas não podem remover outros Admins nem o Líder; **Membros** participam do chat e posts internos.
 
 ---
 
 ## ✨ Funcionalidades
 
 - **Autenticação Segura:** Registro com validação de e-mail e senha forte, hash BCrypt e JWT.
-- **Gestão de Perfil:** Edição de dados pessoais com upload de foto, estatísticas de leitura e busca de usuários por nome com paginação.
+- **Gestão de Perfil:** Edição de dados pessoais com upload de foto via Cloudinary, estatísticas de leitura e busca de usuários por nome com paginação.
 - **Estante Virtual:** Gerenciamento de livros com status `Lendo`, `Lido` ou `Quero Ler`.
 - **Livro Favorito:** Definir e atualizar um livro favorito destacado no perfil.
 - **Sistema de Seguidores:** Toggle de seguir/deixar de seguir com notificação automática ao seguido.
 - **Chat Global em Tempo Real:** Mensagens, respostas em thread, curtidas ❤️ (toggle) e posts de recrutamento para grupos.
 - **Notificações Push:** Entrega em tempo real via SignalR para eventos de seguidor, match e menção/resposta.
-- **Grupos de Leitura:** CRUD completo, sistema de roles (Líder/Admin/Membro), solicitações de acesso para grupos fechados, posts internos com threads e chat em tempo real isolado por sala.
+- **Grupos de Leitura:** CRUD completo com controle granular de permissões por role (Líder/Admin/Membro), status Aberto/Fechado com solicitações de acesso, posts internos com threads e chat em tempo real isolado por sala.
 - **Exploração de Livros:** Busca na Open Library por tema, título ou autor com paginação.
 - **Matchmaking com IA:** Descoberta de leitores compatíveis com perfil literário detalhado e score de similaridade percentual.
-- **Usuário Premium** ⭐**:** Análise literária personalizada e recomendações geradas pela Google Gemini com base em todo o histórico de leitura.
+- **Usuário Premium** ⭐**:** Ativação pelo próprio usuário e acesso a análise literária personalizada com recomendações geradas pela Google Gemini.
 
 ---
 
@@ -106,10 +113,10 @@ Usuários Premium têm acesso ao `PremiumController`, que coleta todo o históri
 |:---:|---|:---:|---|
 | `GET` | `/api/usuario/{id}` | ❌ | Retorna o perfil público de um usuário pelo ID. Inclui campo `premium`. |
 | `GET` | `/api/usuario/usuariosPorNome` | ❌ | Busca usuários pelo nome com paginação. Params: `nome`, `pagina`, `tamanhoPagina`. Retorna `temMais` para controle do botão "Carregar mais". |
-| `PUT` | `/api/usuario/editar` | ✅ | Edita o perfil do usuário logado (multipart/form-data, suporta upload de foto). |
-| `GET` | `/api/usuario/informacoes/{id?}` | ✅ | Retorna estatísticas detalhadas: total de livros, top temas, top autores e livro favorito. |
-| `DELETE` | `/api/usuario/deletar` | ✅ | Deleta a conta do usuário logado e remove a foto do servidor. |
-| `PUT` | `/api/usuario/premium/{id}` | ✅ | Ativa ou desativa o Premium do usuário. Body: `{ "ativar": true }`. Preparado para integração com gateway de pagamento. |
+| `PUT` | `/api/usuario/editar` | ✅ | Edita o perfil do usuário logado (multipart/form-data, foto salva no Cloudinary). |
+| `GET` | `/api/usuario/informacoes/{id?}` | ✅ | Retorna estatísticas detalhadas: total de livros, top temas, top autores, seguidores, seguindo e livro favorito. |
+| `DELETE` | `/api/usuario/deletar` | ✅ | Deleta a conta do usuário logado e remove a foto do Cloudinary. |
+| `PUT` | `/api/usuario/tornar-premium` | ✅ | O próprio usuário ativa seu status Premium. Retorna erro se já for premium. |
 | `POST` | `/api/usuario/meus-livros` | ✅ | Adiciona ou atualiza um livro na estante com um status. |
 | `GET` | `/api/usuario/{id}/livros` | ❌ | Retorna a estante completa de um usuário (Lendo, Lido, Quero Ler). |
 | `DELETE` | `/api/usuario/meus-livros/{livroId}` | ✅ | Remove um livro da estante do usuário logado. |
@@ -163,15 +170,16 @@ Usuários Premium têm acesso ao `PremiumController`, que coleta todo o históri
 |:---:|---|:---:|:---:|---|
 | `GET` | `/api/grupos` | ❌ | Todos | Lista todos os grupos com total de membros. |
 | `GET` | `/api/grupos/{id}` | ❌ | Todos | Detalhe do grupo com lista completa de membros e roles. |
-| `POST` | `/api/grupos` | ✅ | Autenticado | Cria um grupo. O criador vira Líder automaticamente. Suporta upload de foto capa. |
-| `PUT` | `/api/grupos/{id}` | ✅ | Líder | Edita nome, descrição, status e foto do grupo. |
-| `DELETE` | `/api/grupos/{id}` | ✅ | Líder | Deleta o grupo e todos os dados em cascata. |
+| `POST` | `/api/grupos` | ✅ | Autenticado | Cria um grupo. O criador vira Líder automaticamente. Suporta upload de foto capa via Cloudinary. |
+| `PUT` | `/api/grupos/{id}` | ✅ | **Líder** | Edita **nome, descrição e foto** do grupo. Status não é alterado aqui — use o endpoint de status. |
+| `PUT` | `/api/grupos/{id}/status` | ✅ | **Líder / Admin** | Alterna o status do grupo entre `Aberto` e `Fechado`. Body: `{ "status": "Fechado" }`. |
+| `DELETE` | `/api/grupos/{id}` | ✅ | **Líder** | Deleta o grupo, remove a foto do Cloudinary e todos os dados em cascata. |
 | `POST` | `/api/grupos/{id}/entrar` | ✅ | Autenticado | Entra direto se grupo Aberto. Cria solicitação e notifica o Líder se grupo Fechado. |
 | `POST` | `/api/grupos/{id}/sair` | ✅ | Membro | Sai do grupo. Líder não pode sair — deve deletar o grupo. |
 | `GET` | `/api/grupos/{id}/solicitacoes` | ✅ | Líder / Admin | Lista solicitações de entrada pendentes. |
 | `PUT` | `/api/grupos/{id}/solicitacoes/{sid}` | ✅ | Líder / Admin | Aceita ou recusa uma solicitação. Notifica o solicitante com o resultado. |
-| `PUT` | `/api/grupos/{id}/membros/{mid}/role` | ✅ | Líder | Promove membro a Admin ou rebaixa Admin a Membro. |
-| `DELETE` | `/api/grupos/{id}/membros/{mid}` | ✅ | Líder / Admin | Remove um membro do grupo. |
+| `PUT` | `/api/grupos/{id}/membros/{mid}/role` | ✅ | **Líder** | Promove membro a Admin ou rebaixa Admin a Membro. |
+| `DELETE` | `/api/grupos/{id}/membros/{mid}` | ✅ | Líder / Admin* | Remove um membro. *Admin só pode remover Membros comuns — não pode remover outros Admins nem o Líder. |
 | `GET` | `/api/grupos/{id}/posts` | ✅ | Membro | Lista posts internos com threads de respostas e paginação. |
 | `POST` | `/api/grupos/{id}/posts` | ✅ | Membro | Cria post interno. Suporta `PostPaiId` para respostas em thread. |
 | `DELETE` | `/api/grupos/{id}/posts/{pid}` | ✅ | Dono / Admin / Líder | Deleta post e respostas em cascata. |
@@ -227,6 +235,7 @@ Usuários Premium têm acesso ao `PremiumController`, que coleta todo o históri
 - [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
 - [SQL Server](https://www.microsoft.com/pt-br/sql-server/sql-server-downloads) (ou SQL Server Express)
 - [Git](https://git-scm.com/)
+- Conta no [Cloudinary](https://cloudinary.com) (plano gratuito)
 
 ---
 
@@ -255,6 +264,11 @@ cd letrify-api
   "Qdrant": {
     "Host": "localhost",
     "Port": 6333
+  },
+  "Cloudinary": {
+    "CloudName": "SEU_CLOUD_NAME",
+    "ApiKey": "SUA_API_KEY",
+    "ApiSecret": "SEU_API_SECRET"
   }
 }
 ```
@@ -271,28 +285,21 @@ Como o projeto não utiliza Migrations, rode os scripts na seguinte ordem no SQL
 3. Notificacoes
 4. Grupos → UsuarioGrupo → SolicitacaoGrupo → PostGrupo → MensagemGrupo
 5. CurtidaChat
-6. ALTER TABLE MensagensChat ADD GrupoId     ← recrutamento
-7. ALTER TABLE usuarios ADD premium BIT DEFAULT 0  ← premium
+6. ALTER TABLE MensagensChat ADD GrupoId          ← recrutamento
+7. ALTER TABLE usuarios ADD premium BIT DEFAULT 0 ← premium
 ```
 
-**4. Crie as pastas de upload**
-```
-wwwroot/
-  fotos/     ← fotos de perfil dos usuários
-  grupos/    ← fotos de capa dos grupos
-```
-
-**5. Execute a API**
+**4. Execute a API**
 ```bash
 dotnet run
 ```
 
-**6. Acesse a documentação OpenAPI**
+**5. Acesse a documentação OpenAPI**
 ```
 https://localhost:7XXX/openapi
 ```
 
-> 💡 Os endpoints de `/api/match` e `/api/premium/analise` ficam indisponíveis sem a chave do Gemini configurada. Todos os outros funcionam normalmente.
+> 💡 Os endpoints de `/api/match` e `/api/premium/analise` ficam indisponíveis sem a chave do Gemini configurada. O upload de fotos fica indisponível sem as credenciais do Cloudinary. Todos os outros funcionam normalmente.
 
 ---
 

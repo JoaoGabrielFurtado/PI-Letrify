@@ -143,6 +143,26 @@ public class UsuarioController : ControllerBase
         return Ok(new { message = "Agora você é premium!" });
     }
 
+    [HttpPut("cancelar-premium")]
+    [Authorize]
+    public async Task<IActionResult> CancelarPremium()
+    {
+        var usuarioId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+        var usuario = await _contexto.Usuarios.FirstOrDefaultAsync(u => u.Id == usuarioId);
+
+        if (usuario == null)
+            return NotFound("Usuário não encontrado no banco de dados.");
+
+        if (usuario.Premium)
+            return BadRequest(new { erro = "Você não é PREMIUM!" });
+
+        usuario.Premium = false;
+        await _contexto.SaveChangesAsync();
+
+        return Ok(new { message = "Assinatura Cancelada com Sucesso!" });
+    }
+
     [HttpPost("meus-livros")]
     [Authorize]
     public async Task<IActionResult> AdicionarLivroColecao([FromBody] AdicionarLivroColecaoDto dto)

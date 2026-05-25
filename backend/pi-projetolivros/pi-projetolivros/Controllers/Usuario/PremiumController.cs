@@ -97,6 +97,7 @@ public class PremiumController : ControllerBase
         prompt.AppendLine($"  - Lidos: {lidos.Count}");
         prompt.AppendLine($"  - Lendo atualmente: {lendo.Count}");
         prompt.AppendLine($"  - Quer ler: {quereLer.Count}");
+        prompt.AppendLine($"  - Atenção: Retorne o texto num formato amigável, com emojis interatividos e num formato que agrade o leitor");
 
         if (ultimosLidos.Any())
             prompt.AppendLine($"Últimos livros lidos: {string.Join(", ", ultimosLidos)}");

@@ -275,7 +275,7 @@ public async Task<IActionResult> Criar([FromForm] CriarGrupoDto dto)
             {
                 s.Id,
                 s.DataSolicitacao,
-                Usuario = new { s.Usuario.Id, s.Usuario.Nome, s.Usuario.FotoPerfil }
+                Usuario = new { s.Usuario.Id, s.Usuario.Nome, s.Usuario.FotoPerfil, s.Usuario.Premium }
             })
             .ToListAsync();
 
@@ -430,7 +430,7 @@ public async Task<IActionResult> Criar([FromForm] CriarGrupoDto dto)
                 p.Id,
                 p.Conteudo,
                 p.DataPostagem,
-                Usuario = new { p.Usuario.Id, p.Usuario.Nome, p.Usuario.FotoPerfil },
+                Usuario = new { p.Usuario.Id, p.Usuario.Nome, p.Usuario.FotoPerfil, p.Usuario.Premium },
                 Respostas = p.Respostas
                     .OrderBy(r => r.DataPostagem)
                     .Select(r => new
@@ -540,7 +540,7 @@ public async Task<IActionResult> Criar([FromForm] CriarGrupoDto dto)
             mensagem.Id,
             mensagem.Conteudo,
             mensagem.DataPostagem,
-            Usuario = new { remetente.Id, remetente.Nome, remetente.FotoPerfil }
+            Usuario = new { remetente.Id, remetente.Nome, remetente.FotoPerfil, remetente.Premium }
         };
 
         await _hubContext.Clients.Group($"grupo-{id}").SendAsync("ReceberMensagemGrupo", payload);
@@ -574,7 +574,7 @@ public async Task<IActionResult> Criar([FromForm] CriarGrupoDto dto)
                 m.Id,
                 m.Conteudo,
                 m.DataPostagem,
-                Usuario = new { m.Usuario.Id, m.Usuario.Nome, m.Usuario.FotoPerfil }
+                Usuario = new { m.Usuario.Id, m.Usuario.Nome, m.Usuario.FotoPerfil, m.Usuario.Premium }
             })
             .ToListAsync();
 

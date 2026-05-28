@@ -154,7 +154,8 @@ public class ChatController : ControllerBase
                 {
                     m.Usuario.Id,
                     m.Usuario.Nome,
-                    m.Usuario.FotoPerfil
+                    m.Usuario.FotoPerfil,
+                    m.Usuario.Premium
                 },
                 TotalCurtidas = m.Curtidas.Count,
                 EuCurti = usuarioLogadoId != 0 && m.Curtidas.Any(c => c.UsuarioId == usuarioLogadoId),

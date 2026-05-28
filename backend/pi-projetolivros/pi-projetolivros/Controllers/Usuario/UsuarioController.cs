@@ -282,6 +282,37 @@ public class UsuarioController : ControllerBase
         return Ok(new { message = "Livro removido da sua lista com sucesso!" });
     }
 
+    [HttpGet("gruposPertence/{id?}")]
+    [Authorize]
+    public async Task<IActionResult> GruposUsuario(int? id)
+    {
+        int targetUserId;
+
+        if (id.HasValue && id.Value > 0)
+        {
+            targetUserId = id.Value;
+        }
+        else
+        {
+            var usuarioIdText = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(usuarioIdText, out targetUserId))
+                return Unauthorized(new { mensagem = "Token inválido." });
+        }
+
+        var listaGrupos = await _contexto.UsuarioGrupos
+            .Where(u => u.UsuarioId == targetUserId)
+            .Select(u => new GrupoResponseDto
+            {
+                Id = u.Grupo.Id,
+                Nome = u.Grupo.Nome,
+                Descricao = u.Grupo.Descricao,
+                Status = u.Grupo.Status,
+                FotoCapa = u.Grupo.FotoCapa
+            })
+            .ToListAsync();
+
+        return Ok(listaGrupos);
+    }
 
     [HttpGet("informacoes/{id?}")]
     [Authorize]
@@ -372,6 +403,9 @@ public class UsuarioController : ControllerBase
             .AsNoTracking()
             .CountAsync(s => s.SeguidorId == targetUserId);
 
+        var totalGrupos = await _contexto.UsuarioGrupos
+            .CountAsync(u => u.UsuarioId == targetUserId);
+
         var totalLivros = livrosDoUsuario.Count;
 
         return Ok(new
@@ -382,7 +416,8 @@ public class UsuarioController : ControllerBase
                 foto = usuario.FotoPerfil,
                 seguidores = totalSeguidores,
                 seguindo = totalSeguindo,
-                premium = pm
+                premium = pm,
+                totalGruposPertence = totalGrupos
             },
             estatisticas = new
             {

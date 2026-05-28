@@ -478,6 +478,8 @@ public async Task<IActionResult> Criar([FromForm] CriarGrupoDto dto)
         _contexto.PostsGrupo.Add(post);
         await _contexto.SaveChangesAsync();
 
+        await _hubContext.Clients.Group($"grupo-{id}").SendAsync("NotificarNovoPost");
+
         return Ok(new { mensagem = "Post criado com sucesso!", postId = post.Id });
     }
 

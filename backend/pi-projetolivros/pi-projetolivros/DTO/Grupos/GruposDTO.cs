@@ -46,3 +46,12 @@ public class AlterarStatusGrupoDto
 {
     public string Status { get; set; } = string.Empty; // "Aberto" | "Fechado"
 }
+
+public class GrupoResponseDto
+{
+    public int Id { get; set; }
+    public string Nome { get; set; } = string.Empty;
+    public string? Descricao { get; set; }
+    public string? Status { get; set; }
+    public string? FotoCapa { get; set; }
+}

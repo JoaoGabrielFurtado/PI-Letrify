@@ -38,6 +38,11 @@ public partial class Banco : DbContext
     public DbSet<PostGrupo> PostsGrupo { get; set; }
     public DbSet<MensagemGrupo> MensagensGrupo { get; set; }
     public DbSet<CurtidaChat> CurtidasChat { get; set; }
+    public DbSet<Conversa> Conversas { get; set; }
+    public DbSet<MensagemDireta> MensagensDiretas { get; set; }
+    public DbSet<MetaLeitura> MetasLeitura { get; set; }
+    public DbSet<CheckInLeitura> CheckInsLeitura { get; set; }
+    public DbSet<StreakLeitura> StreaksLeitura { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer("Name=ConnectionStrings:Azure");
@@ -374,6 +379,88 @@ public partial class Banco : DbContext
             entity.HasOne(c => c.Mensagem)
                   .WithMany(m => m.Curtidas)
                   .HasForeignKey(c => c.MensagemId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Conversa>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+            entity.ToTable("Conversas");
+            entity.HasIndex(c => new { c.Usuario1Id, c.Usuario2Id }).IsUnique();
+            entity.Property(c => c.DataCriacao).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(c => c.Usuario1)
+                  .WithMany()
+                  .HasForeignKey(c => c.Usuario1Id)
+                  .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(c => c.Usuario2)
+                  .WithMany()
+                  .HasForeignKey(c => c.Usuario2Id)
+                  .OnDelete(DeleteBehavior.NoAction);
+        });
+
+        modelBuilder.Entity<MensagemDireta>(entity =>
+        {
+            entity.HasKey(m => m.Id);
+            entity.ToTable("MensagensDiretas");
+            entity.Property(m => m.Conteudo).IsRequired().HasMaxLength(1000);
+            entity.Property(m => m.DataEnvio).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(m => m.Conversa)
+                  .WithMany(c => c.Mensagens)
+                  .HasForeignKey(m => m.ConversaId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(m => m.Remetente)
+                  .WithMany()
+                  .HasForeignKey(m => m.RemetenteId)
+                  .OnDelete(DeleteBehavior.NoAction);
+        });
+
+        modelBuilder.Entity<MetaLeitura>(entity =>
+        {
+            entity.HasKey(m => m.Id);
+            entity.ToTable("MetasLeitura");
+            entity.Property(m => m.Tipo).IsRequired().HasMaxLength(20);
+            entity.Property(m => m.Periodicidade).IsRequired().HasMaxLength(10);
+            entity.Property(m => m.DataCriacao).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(m => m.Usuario)
+                  .WithMany()
+                  .HasForeignKey(m => m.UsuarioId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<CheckInLeitura>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+            entity.ToTable("CheckInsLeitura");
+            entity.HasIndex(c => new { c.MetaId, c.Data }).IsUnique();
+            entity.Property(c => c.DataCriacao).HasDefaultValueSql("GETUTCDATE()");
+            entity.Property(c => c.Data).HasColumnType("date");
+
+            entity.HasOne(c => c.Meta)
+                  .WithMany(m => m.CheckIns)
+                  .HasForeignKey(c => c.MetaId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(c => c.Usuario)
+                  .WithMany()
+                  .HasForeignKey(c => c.UsuarioId)
+                  .OnDelete(DeleteBehavior.NoAction);
+        });
+
+        modelBuilder.Entity<StreakLeitura>(entity =>
+        {
+            entity.HasKey(s => s.Id);
+            entity.ToTable("StreaksLeitura");
+            entity.HasIndex(s => s.UsuarioId).IsUnique();
+            entity.Property(s => s.UltimoCheckIn).HasColumnType("date");
+
+            entity.HasOne(s => s.Usuario)
+                  .WithMany()
+                  .HasForeignKey(s => s.UsuarioId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
 

@@ -88,6 +88,7 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddHttpClient<GeminiServices>();
+builder.Services.AddHostedService<VerificadorStreak>();
 builder.Services.AddSingleton<QdrantServices>();
 builder.Services.AddHostedService<LimpezaBancoChat>();
 builder.Services.AddSingleton<CloudinaryService>();
@@ -136,5 +137,6 @@ app.MapControllers();
 app.MapHub<ChatHub>("/hubs/chat");
 app.MapHub<NotificacaoHub>("/hubs/notificacoes");
 app.MapHub<GrupoHub>("/hubs/grupo");
+app.MapHub<DMHub>("/hubs/dm");
 
 app.Run();

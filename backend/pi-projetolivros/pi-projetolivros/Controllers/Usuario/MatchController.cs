@@ -84,7 +84,7 @@ public class MatchController : ControllerBase
 
             var usuariosDoBanco = await _contexto.Usuarios
                 .Where(u => idsDosMatches.Contains(u.Id))
-                .Select(u => new { u.Id, u.Nome, u.Cidade, u.FotoPerfil })
+                .Select(u => new { u.Id, u.Nome, u.Cidade, u.FotoPerfil, u.Premium })
                 .ToListAsync();
 
             var situacoesDosBatch = await _contexto.SituacaoLivros
@@ -134,6 +134,7 @@ public class MatchController : ControllerBase
                             usuario.Nome,
                             usuario.Cidade,
                             usuario.FotoPerfil,
+                            usuario.Premium,
                         },
                         PerfilLiterario = new
                         {

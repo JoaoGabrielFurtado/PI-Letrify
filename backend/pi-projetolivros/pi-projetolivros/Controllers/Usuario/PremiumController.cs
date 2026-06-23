@@ -91,6 +91,7 @@ public class PremiumController : ControllerBase
         prompt.AppendLine("1. **Análise do Perfil**: Um parágrafo descrevendo o estilo, gostos e padrões de leitura desta pessoa de forma envolvente e empática.");
         prompt.AppendLine("2. **Recomendações**: Uma lista de 5 livros que esta pessoa provavelmente vai adorar, com uma frase explicando o motivo de cada indicação.");
         prompt.AppendLine("Seja específico, use os dados fornecidos e escreva de forma calorosa, como se fosse uma conversa entre amigos apaixonados por livros.");
+        prompt.AppendLine("Importante: Devolver a resposta em linguagem de leitura convencional, e não em MARKDOWN ou qualquer outra forma de escrita de entendimento entre máquinas");
         prompt.AppendLine();
         prompt.AppendLine($"Nome do leitor: {usuario.Nome}");
         prompt.AppendLine($"Total de livros na estante: {situacoes.Count}");

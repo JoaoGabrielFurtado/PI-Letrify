@@ -87,6 +87,8 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.AddHttpClient<LivroIngestaoService>();
+builder.Services.AddScoped<LivroIngestaoService>();
 builder.Services.AddHttpClient<GeminiServices>();
 builder.Services.AddHostedService<VerificadorStreak>();
 builder.Services.AddSingleton<QdrantServices>();

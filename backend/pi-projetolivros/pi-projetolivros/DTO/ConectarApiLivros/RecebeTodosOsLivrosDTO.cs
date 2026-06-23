@@ -30,4 +30,7 @@ public class OpenLibraryPesquisaDoc
 
     [JsonPropertyName("subject")]
     public List<string> Temas { get; set; }
+
+    [JsonPropertyName("cover_edition_key")]
+    public string? CoverEditionKey { get; set; }
 }

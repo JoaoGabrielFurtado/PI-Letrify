@@ -9,5 +9,7 @@ public class LivroClasse
     public int Paginas { get; set; }
     public string Editora { get; set; }
 
+    public string CapaUrl { get; set; } = string.Empty;
+
     public List<string> Temas { get; set; } = new List<string>();
 }

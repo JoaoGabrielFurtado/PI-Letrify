@@ -214,7 +214,21 @@ public partial class Banco : DbContext
 
             entity.Property(m => m.Conteudo)
                   .IsRequired()
-                  .HasMaxLength(150);
+                  .HasMaxLength(750); 
+
+            entity.Property(m => m.ResenhaIsbn)
+                  .HasMaxLength(20);
+
+            entity.Property(m => m.ResenhaTituloLivro)
+                  .HasMaxLength(300);
+
+            entity.Property(m => m.ResenhaAutorLivro)
+                  .HasMaxLength(300);
+
+            entity.Property(m => m.ResenhaCapaUrl)
+                  .HasMaxLength(500);
+
+            entity.Property(m => m.ResenhaNotaLivro);
 
             entity.HasOne(m => m.Usuario)
                   .WithMany()

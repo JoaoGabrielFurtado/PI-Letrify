@@ -282,6 +282,37 @@ public class UsuarioController : ControllerBase
         return Ok(new { message = "Livro removido da sua lista com sucesso!" });
     }
 
+    [HttpGet("livroslidos")]
+    [Authorize]
+    public async Task<IActionResult> RetornaLivrosLidos()
+    {
+        var usuarioIdText = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(usuarioIdText, out int usuarioId))
+            return Unauthorized("Token inválido.");
+
+        var livrosLidos = await _contexto.SituacaoLivros
+            .AsNoTracking()
+            .Include(s => s.Livro)
+            .Where(s => s.UsuarioId == usuarioId && s.Status == "Lido")
+            .Select(s => new
+            {
+                LivroId = s.Livro!.Id,
+                Titulo = s.Livro.Titulo,
+                Autor = s.Livro.Autor ?? "Autor desconhecido",
+                CapaUrl = !string.IsNullOrEmpty(s.Livro.Isbn)
+                    ? $"https://covers.openlibrary.org/b/isbn/{s.Livro.Isbn.Replace("Sem ISBN - ", "").Trim()}-M.jpg"
+                    : "",
+                DataLido = s.DataAtualizacao
+            })
+            .OrderBy(s => s.Titulo)
+            .ToListAsync();
+
+        if (!livrosLidos.Any())
+            return NotFound(new { erro = "Você ainda não marcou nenhum livro como Lido." });
+
+        return Ok(livrosLidos);
+    }
+
 
     [HttpGet("informacoes/{id?}")]
     [Authorize]

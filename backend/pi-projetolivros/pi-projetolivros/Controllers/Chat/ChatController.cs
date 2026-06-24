@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using pi_projetolivros.DTO.Chat;
+using pi_projetolivros.DTO.ConectarApiLivros;
 using pi_projetolivros.Hubs;
 using pi_projetolivros.Models.Chat;
 using pi_projetolivros.Servicos;
@@ -265,5 +266,102 @@ public class ChatController : ControllerBase
         });
 
         return Ok(new { mensagem = "Amei!", curtiu = true, total = totalAposAdicionar });
+    }
+
+    [HttpPost("resenha")]
+    [Authorize]
+    public async Task<IActionResult> PublicarResenha([FromBody] PublicarResenhaDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Conteudo))
+            return BadRequest(new { erro = "A resenha não pode estar vazia." });
+
+        if (dto.Conteudo.Length > 750)
+            return BadRequest(new { erro = "Limite da resenha: 750 caracteres." });
+
+        if (dto.LivroId <= 0)
+            return BadRequest(new { erro = "Selecione um livro para resenhar." });
+
+        if (dto.NotaLivro < 1 || dto.NotaLivro > 5)
+            return BadRequest(new { erro = "A nota deve ser entre 1 e 5 estrelas." });
+
+        var usuarioIdText = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(usuarioIdText, out int usuarioId))
+            return Unauthorized(new { erro = "Token inválido." });
+
+        // Verifica se o livro está na estante do usuário com status "Lido"
+        var situacao = await _contexto.SituacaoLivros
+            .AsNoTracking()
+            .Include(s => s.Livro)
+            .FirstOrDefaultAsync(s =>
+                s.UsuarioId == usuarioId &&
+                s.LivroId == dto.LivroId &&
+                s.Status == "Lido");
+
+        if (situacao == null)
+            return BadRequest(new { erro = "Você só pode resenhar livros marcados como Lido na sua estante." });
+
+        var livro = situacao.Livro!;
+
+        // Limpa o prefixo "Sem ISBN - " que vem do banco antes de montar a URL
+        var isbnLimpo = (livro.Isbn ?? "")
+            .Replace("Sem ISBN - ", "")
+            .Trim();
+
+        var capaUrl = !string.IsNullOrEmpty(isbnLimpo)
+            ? $"https://covers.openlibrary.org/b/isbn/{isbnLimpo}-M.jpg"
+            : "";
+
+        var resenha = new MensagemChat
+        {
+            UsuarioId = usuarioId,
+            Conteudo = dto.Conteudo,
+            DataPostagem = DateTime.UtcNow,
+            GrupoId = dto.GrupoId,
+            MensagemPaiId = null,
+            ResenhaIsbn = isbnLimpo,
+            ResenhaTituloLivro = livro.Titulo,
+            ResenhaAutorLivro = livro.Autor ?? "Autor desconhecido",
+            ResenhaCapaUrl = capaUrl,
+            ResenhaNotaLivro = dto.NotaLivro
+        };
+
+        _contexto.MensagensChat.Add(resenha);
+        await _contexto.SaveChangesAsync();
+
+        var usuarioQueEnviou = await _contexto.Usuarios.FindAsync(usuarioId);
+
+        var payload = new
+        {
+            resenha.Id,
+            resenha.Conteudo,
+            resenha.DataPostagem,
+            TipoPost = "resenha",
+            Usuario = new
+            {
+                usuarioQueEnviou!.Id,
+                usuarioQueEnviou.Nome,
+                usuarioQueEnviou.FotoPerfil
+            },
+            Livro = new
+            {
+                Isbn = resenha.ResenhaIsbn,
+                Titulo = resenha.ResenhaTituloLivro,
+                Autor = resenha.ResenhaAutorLivro,
+                CapaUrl = resenha.ResenhaCapaUrl,
+                Nota = resenha.ResenhaNotaLivro
+            },
+            TotalCurtidas = 0,
+            EuCurti = false,
+            Respostas = new List<object>()
+        };
+
+        await _hubContext.Clients.All.SendAsync("ReceberNovaMensagem", payload);
+
+        return Ok(new
+        {
+            message = "Resenha publicada com sucesso!",
+            id = resenha.Id,
+            dataPostagem = resenha.DataPostagem
+        });
     }
 }

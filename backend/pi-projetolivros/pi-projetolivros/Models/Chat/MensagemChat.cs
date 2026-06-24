@@ -16,4 +16,10 @@ public class MensagemChat
 
     public int? GrupoId { get; set; }
     public virtual Grupo Grupo { get; set; }
+
+    public string? ResenhaIsbn { get; set; }
+    public string? ResenhaTituloLivro { get; set; }
+    public string? ResenhaAutorLivro { get; set; }
+    public string? ResenhaCapaUrl { get; set; }
+    public int? ResenhaNotaLivro { get; set; }
 }

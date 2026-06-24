@@ -27,77 +27,34 @@ public class LivroController : ControllerBase
         _geminiServices = geminiServices;
     }
 
-    [HttpGet("livrostema")]
-    public async Task<ActionResult<List<LivroClasse>>> ExplorarLivros(
-        [FromQuery] string tema = "fiction",
+    [HttpGet("buscar")]
+    public async Task<ActionResult<List<LivroClasse>>> Buscar(
+        [FromQuery] string? q = null,
+        [FromQuery] string? titulo = null,
+        [FromQuery] string? autor = null,
+        [FromQuery] string? tema = null,
         [FromQuery] int pagina = 1,
         [FromQuery] int quantidade = 20)
     {
+        var parametros = new List<string>();
 
-        // exemplo: GET /api/livro/livrostema?tema=fantasy&quantidade=10
+        if (!string.IsNullOrWhiteSpace(q))
+            parametros.Add($"q={Uri.EscapeDataString(q.Trim())}");
 
-        string temaTratado = Uri.EscapeDataString(tema.Trim().ToLower());
-        string url = $"https://openlibrary.org/search.json?subject={temaTratado}&page={pagina}&limit={quantidade}&fields=title,author_name,first_publish_year,isbn,publisher,subject,cover_edition_key";
+        if (!string.IsNullOrWhiteSpace(titulo))
+            parametros.Add($"title={Uri.EscapeDataString(titulo.Trim())}");
 
-        var response = await _httpClient.GetAsync(url);
-        if (!response.IsSuccessStatusCode)
-            return BadRequest("Erro ao buscar livros na Open Library.");
+        if (!string.IsNullOrWhiteSpace(autor))
+            parametros.Add($"author={Uri.EscapeDataString(autor.Trim())}");
 
-        string jsonString = await response.Content.ReadAsStringAsync();
+        if (!string.IsNullOrWhiteSpace(tema))
+            parametros.Add($"subject={Uri.EscapeDataString(tema.Trim().ToLower())}");
 
-        var resultadoBusca = JsonSerializer.Deserialize<RecebeTodosOsLivrosDTO>(jsonString);
+        if (!parametros.Any())
+            return BadRequest("Informe ao menos um critério de busca: q, titulo, autor ou tema.");
 
-        if (resultadoBusca == null || resultadoBusca.Docs == null || !resultadoBusca.Docs.Any())
-            return NotFound("Nenhum livro encontrado para este tema.");
-
-        var listaDeLivros = ConverterDocsParaLivros(resultadoBusca.Docs, tema);
-        return Ok(listaDeLivros);
-    }
-
-    [HttpGet("livrostitulo")]
-    public async Task<ActionResult<List<LivroClasse>>> BuscarPorTitulo(
-        [FromQuery] string titulo,
-        [FromQuery] int pagina = 1,
-        [FromQuery] int quantidade = 20)
-    {
-
-        //exemplo pesquisa: GET /api/livro/livrostitulo?titulo=principe&quantidade=20
-
-
-        if (string.IsNullOrWhiteSpace(titulo))
-            return BadRequest("O título para pesquisa não pode estar vazio.");
-
-        string tituloTratado = Uri.EscapeDataString(titulo.Trim().ToLower());
-
-        string url = $"https://openlibrary.org/search.json?title={tituloTratado}&page={pagina}&limit={quantidade}&fields=title,author_name,first_publish_year,isbn,publisher,subject,cover_edition_key";
-
-
-        var response = await _httpClient.GetAsync(url);
-        if (!response.IsSuccessStatusCode)
-            return BadRequest("Erro ao buscar livros na Open Library.");
-
-        string jsonString = await response.Content.ReadAsStringAsync();
-
-        var resultadoBusca = JsonSerializer.Deserialize<RecebeTodosOsLivrosDTO>(jsonString);
-
-        if (resultadoBusca == null || resultadoBusca.Docs == null || !resultadoBusca.Docs.Any())
-            return NotFound("Nenhum livro encontrado com este título.");
-
-        var listaDeLivros = ConverterDocsParaLivros(resultadoBusca.Docs);
-        return Ok(listaDeLivros);
-    }
-
-    [HttpGet("livrosautor")]
-    public async Task<ActionResult<List<LivroClasse>>> BuscarPorAutor(
-        [FromQuery] string autor,
-        [FromQuery] int pagina = 1,
-        [FromQuery] int quantidade = 20)
-    {
-        if (string.IsNullOrWhiteSpace(autor))
-            return BadRequest("O nome do autor para pesquisa não pode estar vazio.");
-
-        string autorTratado = Uri.EscapeDataString(autor.Trim().ToLower());
-        string url = $"https://openlibrary.org/search.json?author={autorTratado}&page={pagina}&limit={quantidade}&fields=title,author_name,first_publish_year,isbn,publisher,subject,cover_edition_key";
+        string campos = "title,author_name,first_publish_year,isbn,publisher,subject,cover_edition_key";
+        string url = $"https://openlibrary.org/search.json?{string.Join("&", parametros)}&page={pagina}&limit={quantidade}&fields={campos}";
 
         var response = await _httpClient.GetAsync(url);
         if (!response.IsSuccessStatusCode)
@@ -106,10 +63,10 @@ public class LivroController : ControllerBase
         string jsonString = await response.Content.ReadAsStringAsync();
         var resultadoBusca = JsonSerializer.Deserialize<RecebeTodosOsLivrosDTO>(jsonString);
 
-        if (resultadoBusca == null || resultadoBusca.Docs == null || !resultadoBusca.Docs.Any())
-            return NotFound("Nenhum livro encontrado para este autor.");
+        if (resultadoBusca?.Docs == null || !resultadoBusca.Docs.Any())
+            return NotFound("Nenhum livro encontrado para os critérios informados.");
 
-        var listaDeLivros = ConverterDocsParaLivros(resultadoBusca.Docs);
+        var listaDeLivros = ConverterDocsParaLivros(resultadoBusca.Docs, tema ?? "");
         return Ok(listaDeLivros);
     }
 

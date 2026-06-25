@@ -142,6 +142,7 @@ public class ChatController : ControllerBase
 
         var mensagensGlobais = await _contexto.MensagensChat
             .AsNoTracking()
+            .Include(m => m.Usuario)
             .Where(m => m.MensagemPaiId == null)
             .OrderByDescending(m => m.DataPostagem)
             .Skip(quantidadePular)
@@ -151,6 +152,17 @@ public class ChatController : ControllerBase
                 m.Id,
                 m.Conteudo,
                 m.DataPostagem,
+                TipoPost = m.ResenhaIsbn != null ? "resenha" : "post",
+                Livro = m.ResenhaIsbn != null ? new
+                {
+                    Isbn = m.ResenhaIsbn,
+                    Titulo = m.ResenhaTituloLivro,
+                    Autor = m.ResenhaAutorLivro ?? "Autor desconhecido",
+                    CapaUrl = !string.IsNullOrEmpty(m.ResenhaIsbn)
+                        ? $"https://covers.openlibrary.org/b/isbn/{m.ResenhaIsbn.Replace("Sem ISBN - ", "").Trim()}-M.jpg"
+                        : "",
+                    Nota = m.ResenhaNotaLivro
+                } : null,
                 Usuario = new
                 {
                     m.Usuario.Id,

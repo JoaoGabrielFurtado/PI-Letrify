@@ -393,6 +393,12 @@ public partial class Banco : DbContext
             entity.HasOne(c => c.Mensagem)
                   .WithMany(m => m.Curtidas)
                   .HasForeignKey(c => c.MensagemId)
+                  .IsRequired(false) 
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(c => c.PostGrupo)
+                  .WithMany()
+                  .HasForeignKey(c => c.PostGrupoId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
 

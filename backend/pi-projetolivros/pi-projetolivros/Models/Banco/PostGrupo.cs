@@ -1,4 +1,6 @@
-﻿namespace pi_projetolivros.Models.Banco
+﻿using pi_projetolivros.Models.Chat;
+
+namespace pi_projetolivros.Models.Banco
 {
     public class PostGrupo
     {
@@ -13,5 +15,7 @@
         public Usuario Usuario { get; set; } = null!;
         public PostGrupo? PostPai { get; set; }
         public ICollection<PostGrupo> Respostas { get; set; } = new List<PostGrupo>();
+
+        public virtual ICollection<CurtidaChat> Curtidas { get; set; } = new List<CurtidaChat>();
     }
 }

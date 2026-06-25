@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using pi_projetolivros.Hubs;
 using pi_projetolivros.Models.Banco;
+using pi_projetolivros.Models.Chat;
 using pi_projetolivros.Servicos;
 using pi_projetolivros_banco;
 using System.Security.Claims;
@@ -397,6 +398,8 @@ public class GruposController : ControllerBase
                 p.Id,
                 p.Conteudo,
                 p.DataPostagem,
+                TotalCurtidas = p.Curtidas.Count(c => c.PostGrupoId == p.Id),
+                EuCurti = usuarioId != null && p.Curtidas.Any(c => c.PostGrupoId == p.Id && c.UsuarioId == usuarioId.Value),
                 Usuario = new { p.Usuario.Id, p.Usuario.Nome, p.Usuario.FotoPerfil },
                 Respostas = p.Respostas
                     .OrderBy(r => r.DataPostagem)
@@ -544,6 +547,65 @@ public class GruposController : ControllerBase
             .ToListAsync();
 
         return Ok(mensagens);
+    }
+
+    [HttpPost("{id}/posts/{postId}/curtir")]
+    public async Task<IActionResult> CurtirOuDescurtirPost(
+    [FromRoute] int id,
+    [FromRoute] int postId)
+    {
+        var usuarioId = ObterUsuarioId();
+        if (usuarioId == null) return Unauthorized();
+
+        if (!await IsMembro(usuarioId.Value, id))
+            return Forbid();
+
+        var postExiste = await _contexto.PostsGrupo
+            .AnyAsync(p => p.Id == postId && p.GrupoId == id);
+
+        if (!postExiste)
+            return NotFound(new { erro = "Post não encontrado." });
+
+        var curtidaExistente = await _contexto.CurtidasChat
+            .FirstOrDefaultAsync(c => c.UsuarioId == usuarioId && c.PostGrupoId == postId);
+
+        if (curtidaExistente != null)
+        {
+            _contexto.CurtidasChat.Remove(curtidaExistente);
+            await _contexto.SaveChangesAsync();
+
+            var totalAposRemover = await _contexto.CurtidasChat
+                .CountAsync(c => c.PostGrupoId == postId);
+
+            await _hubContext.Clients.Group($"grupo-{id}").SendAsync("AtualizarCurtidasPost", new
+            {
+                PostId = postId,
+                Total = totalAposRemover,
+                Curtiu = false
+            });
+
+            return Ok(new { mensagem = "Curtida removida.", curtiu = false, total = totalAposRemover });
+        }
+
+        _contexto.CurtidasChat.Add(new CurtidaChat
+        {
+            UsuarioId = usuarioId.Value,
+            PostGrupoId = postId,
+            MensagemId = null
+        });
+        await _contexto.SaveChangesAsync();
+
+        var totalAposAdicionar = await _contexto.CurtidasChat
+            .CountAsync(c => c.PostGrupoId == postId);
+
+        await _hubContext.Clients.Group($"grupo-{id}").SendAsync("AtualizarCurtidasPost", new
+        {
+            PostId = postId,
+            Total = totalAposAdicionar,
+            Curtiu = true
+        });
+
+        return Ok(new { mensagem = "Post curtido!", curtiu = true, total = totalAposAdicionar });
     }
 
     private int? ObterUsuarioId()

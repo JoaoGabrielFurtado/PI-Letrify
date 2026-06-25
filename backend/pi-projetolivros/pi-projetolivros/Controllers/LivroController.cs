@@ -77,10 +77,22 @@ public class LivroController : ControllerBase
             return BadRequest("Descreva o que você quer sentir lendo.");
 
         var embedding = await _geminiServices.ObterEmbeddingAsync(request.Texto);
-        var livros = await _qdrantServices.BuscarLivrosPorSensacaoAsync(embedding);
+        var resultados = await _qdrantServices.BuscarLivrosPorSensacaoAsync(embedding);
 
-        if (!livros.Any())
+        if (!resultados.Any())
             return NotFound("Nenhum livro encontrado para essa sensação. Tente indexar mais livros.");
+
+        var livros = resultados.Select(r => new LivroClasse
+        {
+            Isbn           = r.OpenLibraryKey ?? "Sem ISBN",
+            Titulo         = r.Titulo,
+            AutorPrincipal = r.Autor ?? "Autor Desconhecido",
+            DataPublicacao = "Desconhecida",
+            Editora        = "Desconhecida",
+            Paginas        = 0,
+            Temas          = r.Assuntos?.Split(',').Select(t => t.Trim()).ToList() ?? new List<string>(),
+            CapaUrl        = r.CapaUrl
+        }).ToList();
 
         return Ok(livros);
     }
@@ -277,7 +289,7 @@ public class LivroController : ControllerBase
                 Editora = doc.Editora?.FirstOrDefault() ?? "Editora Desconhecida",
                 Paginas = 0,
                 Temas = temasDoLivro,
-                CapaUrl = ObterMelhorCapaUrl(primeiroIsbn, olid, doc.Titulo) // <-- novo
+                CapaUrl = ObterMelhorCapaUrl(primeiroIsbn, olid, doc.Titulo) 
             };
             listaDeLivros.Add(meuLivro);
         }

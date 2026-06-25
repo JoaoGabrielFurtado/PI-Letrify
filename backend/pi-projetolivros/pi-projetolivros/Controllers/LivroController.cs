@@ -32,7 +32,7 @@ public class LivroController : ControllerBase
         [FromQuery] string? q = null,
         [FromQuery] string? titulo = null,
         [FromQuery] string? autor = null,
-        [FromQuery] string? tema = null,
+        [FromQuery] List<string>? tema = null, 
         [FromQuery] int pagina = 1,
         [FromQuery] int quantidade = 20)
     {
@@ -47,8 +47,10 @@ public class LivroController : ControllerBase
         if (!string.IsNullOrWhiteSpace(autor))
             parametros.Add($"author={Uri.EscapeDataString(autor.Trim())}");
 
-        if (!string.IsNullOrWhiteSpace(tema))
-            parametros.Add($"subject={Uri.EscapeDataString(tema.Trim().ToLower())}");
+        if (tema != null && tema.Any())
+            foreach (var t in tema)
+                if (!string.IsNullOrWhiteSpace(t))
+                    parametros.Add($"subject={Uri.EscapeDataString(t.Trim().ToLower())}");
 
         if (!parametros.Any())
             return BadRequest("Informe ao menos um critério de busca: q, titulo, autor ou tema.");

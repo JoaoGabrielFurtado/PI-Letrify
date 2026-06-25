@@ -68,7 +68,8 @@ public class LivroController : ControllerBase
         if (resultadoBusca?.Docs == null || !resultadoBusca.Docs.Any())
             return NotFound("Nenhum livro encontrado para os critérios informados.");
 
-        var listaDeLivros = ConverterDocsParaLivros(resultadoBusca.Docs, tema ?? "");
+        var temaPadrao = tema?.FirstOrDefault() ?? "";
+        var listaDeLivros = ConverterDocsParaLivros(resultadoBusca.Docs, temaPadrao);
         return Ok(listaDeLivros);
     }
 

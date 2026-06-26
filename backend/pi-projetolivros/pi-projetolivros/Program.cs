@@ -11,6 +11,7 @@ using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// 1. CONFIGURAÇÃO DO BANCO DE DADOS (AZURE / SQL SERVER)
 var connectionString = builder.Configuration.GetConnectionString("Azure");
 builder.Services.AddDbContext<Banco>(options =>
     options.UseSqlServer(connectionString, sqlOptions =>
@@ -21,6 +22,7 @@ builder.Services.AddDbContext<Banco>(options =>
             errorNumbersToAdd: null);
     }));
 
+// 2. CONTROLLERS E TRATAMENTO DE CICLOS DE JSON
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
@@ -28,6 +30,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 
 builder.Services.AddOpenApi();
 
+// 3. POLÍTICA DE CORS (PERMITIR CREDENCIAIS PARA SIGNALR)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("PermitirFrontend",
@@ -35,13 +38,14 @@ builder.Services.AddCors(options =>
             .WithOrigins(
                 "http://localhost:3000",
                 "http://localhost:5173",
-                "https://letrify.vercel.app"  // produção
+                "https://letrify.vercel.app" // Produção Vercel
             )
             .AllowAnyMethod()
             .AllowAnyHeader()
-            .AllowCredentials());
+            .AllowCredentials()); // Obrigatório para o SignalR funcionar via WebSockets
 });
 
+// 4. CONFIGURAÇÃO DE AUTENTICAÇÃO E VALIDAÇÃO JWT
 var chaveSecreta = builder.Configuration["Jwt:Key"] ?? throw new Exception("A chave secreta do JWT não foi encontrada!");
 var chaveEmBytes = Encoding.UTF8.GetBytes(chaveSecreta);
 
@@ -70,6 +74,7 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero
     };
 
+    // CORREÇÃO CRUCIAL: Captura automática do token enviado pelo SignalR via Query String
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
@@ -77,8 +82,8 @@ builder.Services.AddAuthentication(options =>
             var accessToken = context.Request.Query["access_token"];
             var path = context.HttpContext.Request.Path;
 
-            if (!string.IsNullOrEmpty(accessToken) &&
-                path.StartsWithSegments("/hubs"))
+            // Se a requisição for para qualquer um dos hubs, injeta o token no contexto
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
             {
                 context.Token = accessToken;
             }
@@ -87,6 +92,7 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+// 5. INJEÇÃO DE DEPENDÊNCIAS DOS SERVIÇOS DO ECOSSISTEMA
 builder.Services.AddHttpClient<OpenAIServices>();
 builder.Services.AddScoped<OpenAIServices>();
 builder.Services.AddHttpClient<LivroIngestaoService>();
@@ -96,8 +102,12 @@ builder.Services.AddHostedService<VerificadorStreak>();
 builder.Services.AddSingleton<QdrantServices>();
 builder.Services.AddHostedService<LimpezaBancoChat>();
 builder.Services.AddSingleton<CloudinaryService>();
-builder.Services.AddSignalR();
 builder.Services.AddScoped<NotificacaoService>();
+
+// 6. ADICIONA SUPORTE AO SIGNALR
+builder.Services.AddSignalR();
+
+// 7. POLÍTICA ANTI-SPAM (RATE LIMITING)
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -121,7 +131,7 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
-// Swagger apenas em desenvolvimento
+// 8. PIPELINE DE EXECUÇÃO HTTP (MIDDLEWARES)
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -130,14 +140,17 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+// O CORS DEVE vir estritamente antes da Autenticação e Autorização!
 app.UseCors("PermitirFrontend");
 
 app.UseAuthentication();
 app.UseRateLimiter();
 app.UseAuthorization();
 
-// Rotas sempre ativas — desenvolvimento e produção
+// 9. MAPEAMENTO DE CONTROLLERS DA API
 app.MapControllers();
+
+// 10. MAPEAMENTO DE HUBS DO SIGNALR (Sincronizados milimetricamente com o CORS)
 app.MapHub<ChatHub>("/hubs/chat").RequireCors("PermitirFrontend");
 app.MapHub<NotificacaoHub>("/hubs/notificacoes").RequireCors("PermitirFrontend");
 app.MapHub<GrupoHub>("/hubs/grupo").RequireCors("PermitirFrontend");

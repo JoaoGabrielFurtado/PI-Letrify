@@ -87,6 +87,8 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.AddHttpClient<OpenAIServices>();
+builder.Services.AddScoped<OpenAIServices>();
 builder.Services.AddHttpClient<LivroIngestaoService>();
 builder.Services.AddScoped<LivroIngestaoService>();
 builder.Services.AddHttpClient<GeminiServices>();
@@ -136,9 +138,9 @@ app.UseAuthorization();
 
 // Rotas sempre ativas — desenvolvimento e produção
 app.MapControllers();
-app.MapHub<ChatHub>("/hubs/chat");
-app.MapHub<NotificacaoHub>("/hubs/notificacoes");
-app.MapHub<GrupoHub>("/hubs/grupo");
-app.MapHub<DMHub>("/hubs/dm");
+app.MapHub<ChatHub>("/hubs/chat").RequireCors("PermitirFrontend");
+app.MapHub<NotificacaoHub>("/hubs/notificacoes").RequireCors("PermitirFrontend");
+app.MapHub<GrupoHub>("/hubs/grupo").RequireCors("PermitirFrontend");
+app.MapHub<DMHub>("/hubs/dm").RequireCors("PermitirFrontend");
 
 app.Run();

@@ -135,8 +135,26 @@ public class ChatController : ControllerBase
         if (pagina < 1) pagina = 1;
         if (tamanhoPagina < 1 || tamanhoPagina > 100) tamanhoPagina = 50;
 
+        int usuarioLogadoId = 0;
         var usuarioIdText = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        int.TryParse(usuarioIdText, out int usuarioLogadoId);
+
+        if (!int.TryParse(usuarioIdText, out usuarioLogadoId))
+        {
+            var authHeader = Request.Headers["Authorization"].ToString();
+            if (authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    var token = authHeader["Bearer ".Length..].Trim();
+                    var handler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+                    var jwtToken = handler.ReadJwtToken(token);
+                    var claim = jwtToken.Claims
+                        .FirstOrDefault(c => c.Type == "sub" || c.Type == ClaimTypes.NameIdentifier)?.Value;
+                    int.TryParse(claim, out usuarioLogadoId);
+                }
+                catch { }
+            }
+        }
 
         int quantidadePular = (pagina - 1) * tamanhoPagina;
 

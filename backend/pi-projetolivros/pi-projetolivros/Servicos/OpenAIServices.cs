@@ -3,99 +3,85 @@ using System.Text.Json;
 
 namespace pi_projetolivros.Servicos;
 
-public class GeminiServices
+public class OpenAIServices
 {
     private readonly HttpClient _httpClient;
     private readonly string _apiKey;
 
-    public GeminiServices(HttpClient httpClient, IConfiguration configuration)
+    public OpenAIServices(HttpClient httpClient, IConfiguration configuration)
     {
         _httpClient = httpClient;
-        _apiKey = configuration["Gemini:ApiKey"] ?? throw new ArgumentNullException("API Key do Gemini não encontrada!");
-    }
+        _apiKey = configuration["OpenAI:ApiKey"]
+            ?? throw new ArgumentNullException("API Key da OpenAI não encontrada!");
 
-    public async Task<float[]> ObterEmbeddingAsync(string textoGostosLiterarios)
-    {
-        string url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key={_apiKey}";
-
-        var corpoRequisicao = new
-        {
-            model = "models/gemini-embedding-001",
-            content = new
-            {
-                parts = new[] { new { text = textoGostosLiterarios } }
-            }
-        };
-
-        var jsonContent = new StringContent(JsonSerializer.Serialize(corpoRequisicao), Encoding.UTF8, "application/json");
-
-        var resposta = await _httpClient.PostAsync(url, jsonContent);
-
-        if (!resposta.IsSuccessStatusCode)
-        {
-            if (resposta.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
-            {
-                throw new Exception("O nosso radar de Inteligência Artificial está superaquecido no momento! Por favor, aguarde 1 minutinho e tente novamente.");
-            }
-
-            var erro = await resposta.Content.ReadAsStringAsync();
-            throw new Exception($"Erro na API do Gemini: {erro}");
-        }
-
-        var jsonResposta = await resposta.Content.ReadAsStringAsync();
-
-        var opcoesJson = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-
-        var embeddingResponse = JsonSerializer.Deserialize<EmbeddingResponse>(jsonResposta, opcoesJson);
-
-        return embeddingResponse?.embedding?.values ?? new float[0];
+        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
     }
 
     public async Task<string> GerarTextoAsync(string prompt)
     {
-
-        //var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={_apiKey}";
-        //var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={_apiKey}";
-        //var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={_apiKey}";
-        var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key={_apiKey}";
+        var url = "https://api.openai.com/v1/chat/completions";
 
         var body = new
         {
-            contents = new[]
+            model = "gpt-4o-mini", // mais barato e rápido
+            messages = new[]
             {
-            new
-            {
-                parts = new[]
-                {
-                    new { text = prompt }
-                }
-            }
-        }
+                new { role = "user", content = prompt }
+            },
+            max_tokens = 1000,
+            temperature = 0.7
         };
 
-        int[] esperas = { 2000, 5000, 10000 };
+        var json = JsonSerializer.Serialize(body);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var response = await _httpClient.PostAsJsonAsync(url, body);
+        var response = await _httpClient.PostAsync(url, content);
 
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<JsonElement>();
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<JsonElement>();
+            var texto = result
+                .GetProperty("choices")[0]
+                .GetProperty("message")
+                .GetProperty("content")
+                .GetString();
 
-                var texto = result
-                    .GetProperty("candidates")[0]
-                    .GetProperty("content")
-                    .GetProperty("parts")[0]
-                    .GetProperty("text")
-                    .GetString();
-
-                return texto ?? GerarAnaliseLocal(prompt);
-            }
-
-
-            var erroDoGoogle = await response.Content.ReadAsStringAsync();
-        //throw new Exception($"Erro na API do Gemini: {erroDoGoogle}");
+            return texto ?? GerarAnaliseLocal(prompt);
+        }
 
         return GerarAnaliseLocal(prompt);
+    }
+
+    public async Task<float[]> ObterEmbeddingAsync(string texto)
+    {
+        var url = "https://api.openai.com/v1/embeddings";
+
+        var body = new
+        {
+            model = "text-embedding-3-small",
+            input = texto
+        };
+
+        var json = JsonSerializer.Serialize(body);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        var response = await _httpClient.PostAsync(url, content);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var erro = await response.Content.ReadAsStringAsync();
+            throw new Exception($"Erro na API da OpenAI: {erro}");
+        }
+
+        var result = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var values = result
+            .GetProperty("data")[0]
+            .GetProperty("embedding")
+            .EnumerateArray()
+            .Select(v => v.GetSingle())
+            .ToArray();
+
+        return values;
     }
 
     private string GerarAnaliseLocal(string prompt)
@@ -167,16 +153,4 @@ public class GeminiServices
         var partes = linha.Split(':', 2);
         return partes.Length > 1 ? partes[1].Trim() : string.Empty;
     }
-}
-
-
-
-public class EmbeddingResponse
-{
-    public Embedding embedding { get; set; }
-}
-
-public class Embedding
-{
-    public float[] values { get; set; }
 }

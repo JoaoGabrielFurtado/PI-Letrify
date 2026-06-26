@@ -15,11 +15,13 @@ public class PremiumController : ControllerBase
 {
     private readonly Banco _contexto;
     private readonly GeminiServices _geminiService;
+    private readonly OpenAIServices _openAIServices;
 
-    public PremiumController(Banco contexto, GeminiServices geminiService)
+    public PremiumController(Banco contexto, GeminiServices geminiService, OpenAIServices openAIServices)
     {
         _contexto = contexto;
         _geminiService = geminiService;
+        _openAIServices = openAIServices; 
     }
 
     // GET /api/premium/analise
@@ -45,6 +47,8 @@ public class PremiumController : ControllerBase
             .Include(s => s.Livro)
             .Where(s => s.UsuarioId == usuarioId && s.Livro != null)
             .ToListAsync();
+
+        situacoes = situacoes.Where(s => s.Livro != null).ToList();
 
         if (!situacoes.Any())
             return Ok(new { mensagem = "Adicione livros à sua estante para receber sua análise." });
@@ -76,7 +80,7 @@ public class PremiumController : ControllerBase
         var ultimosLidos = lidos
             .OrderByDescending(s => s.DataAtualizacao)
             .Take(5)
-            .Select(s => s.Livro.Titulo)
+            .Select(s => s.Livro?.Titulo ?? "Título desconhecido")
             .ToList();
 
         var livroFavorito = await _contexto.Favoritos
@@ -103,7 +107,7 @@ public class PremiumController : ControllerBase
             prompt.AppendLine($"Últimos livros lidos: {string.Join(", ", ultimosLidos)}");
 
         if (lendo.Any())
-            prompt.AppendLine($"Lendo atualmente: {string.Join(", ", lendo.Select(s => s.Livro.Titulo))}");
+            prompt.AppendLine($"Lendo atualmente: {string.Join(", ", lendo.Select(s => s.Livro?.Titulo ?? ""))}");
 
         if (!string.IsNullOrEmpty(livroFavorito))
             prompt.AppendLine($"Livro favorito declarado: {livroFavorito}");
@@ -115,7 +119,7 @@ public class PremiumController : ControllerBase
             prompt.AppendLine($"Autores preferidos: {string.Join(", ", topAutores.Select(a => $"{a.Autor} ({a.Quantidade} livros)"))}");
 
         if (quereLer.Any())
-            prompt.AppendLine($"Livros na lista de desejos: {string.Join(", ", quereLer.Take(5).Select(s => s.Livro.Titulo))}");
+            prompt.AppendLine($"Livros na lista de desejos: {string.Join(", ", quereLer.Take(5).Select(s => s.Livro?.Titulo ?? ""))}");
 
         var analise = await _geminiService.GerarTextoAsync(prompt.ToString());
 
